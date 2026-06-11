@@ -15,6 +15,7 @@ This package publishes the Steel extension as a reusable Pi package so it can be
 ## Changes from upstream
 
 - **`steel_screenshot` now returns the file path in tool output** — the screenshot path is included in the visible text response so the LLM can use `read` on it to view the image. Upstream only included the path in `details` metadata that the LLM never sees.
+- **`steel_screenshot` defaults to `fullPage: true`** — captures the entire page by default instead of just the viewport. Pass `fullPage: false` if you only need the viewport.
 - **`steel_computer` now returns the screenshot path in tool output** — same fix as `steel_screenshot`. When a computer action captures a screenshot, the path is visible in the text response.
 - **`steel_scrape` now saves full content to disk** — the full scraped content (before truncation) is written to `.artifacts/scrapes/` as a file. The file path is included in the visible text response, so the LLM can `read` the full content when the inline output is truncated.
 

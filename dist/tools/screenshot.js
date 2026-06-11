@@ -29,7 +29,7 @@ function resolveTimeoutMs(rawTimeout) {
     return resolveToolTimeoutMs(rawTimeout);
 }
 function normalizeFullPage(fullPage) {
-    return fullPage === true;
+    return fullPage !== false;
 }
 async function readSessionUrl(session) {
     const direct = session.url;
@@ -193,7 +193,7 @@ export function screenshotTool(client) {
         label: "Screenshot",
         description: "Capture a screenshot of the current page",
         parameters: Type.Object({
-            fullPage: Type.Optional(Type.Boolean({ description: "Capture full page screenshot instead of viewport-only" })),
+            fullPage: Type.Optional(Type.Boolean({ description: "Capture full page screenshot instead of viewport-only (defaults to true in @false00/pi-steel)" })),
             selector: Type.Optional(Type.String({
                 description: "Optional CSS selector to capture a single element instead of full page",
             })),
