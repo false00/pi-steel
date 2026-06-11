@@ -195,15 +195,19 @@ Or for a single run:
 pi -e npm:@false00/pi-steel "do something"
 ```
 
-## How to read page content
+## How to read page content — use screenshots first
 
-### 1. `steel_screenshot` (best for visual content)
+**Always start with `steel_screenshot`.** It captures the full page and you read the image inline. This is the most reliable way to understand what's on screen.
+
+Fall back to text extraction only when the page is too long, you need structured data, or the screenshot has no readable text.
+
+### 1. `steel_screenshot` (primary — try this first)
 
 Captures a full-page screenshot by default. **The tool output includes the file path (e.g., `.artifacts/screenshots/steel-screenshot-xxx.png`). Use the `read` tool on that path to view the image** — you can read text, headlines, and UI directly from it.
 
 Pass `fullPage: false` if you only need the viewport.
 
-### 2. `steel_scrape` with explicit format (best for structured text)
+### 2. `steel_scrape` with explicit format (fallback for long pages)
 
 Always specify the format:
 - `steel_scrape format: "text"` — plain rendered text via `innerText`, best for articles
