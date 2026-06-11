@@ -298,11 +298,12 @@ export function computerTool(client) {
                     .filter((item) => typeof item === "string" && item.trim().length > 0)
                     .map((item) => item.trim());
                 const outputSuffix = outputParts.length > 0 ? ` ${outputParts.join(" ")}` : "";
+                const artifactSuffix = artifact ? `\nPath: ${artifact.path}` : "";
                 return {
                     content: [
                         {
                             type: "text",
-                            text: `Computer action ${requestBody.action} completed.${outputSuffix}`,
+                            text: `Computer action ${requestBody.action} completed.${outputSuffix}${artifactSuffix}`,
                         },
                     ],
                     details: {
