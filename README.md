@@ -13,7 +13,7 @@ This package publishes the Steel extension as a reusable Pi package so it can be
 ## Quick start
 
 ```bash
-pi install npm:@steel-experiments/pi-steel
+pi install npm:@false00/pi-steel
 ```
 
 Then just ask Pi to browse:
@@ -22,7 +22,7 @@ Then just ask Pi to browse:
 > Go to hacker news and find the top story
 ```
 
-Pi will use `steel_navigate` to open the page, `steel_scrape` to read the content, and return what it finds. All session management happens automatically.
+Pi will use `steel_navigate` to open the page, `steel_screenshot`/`steel_scrape` to read the content, and return what it finds. All session management happens automatically.
 
 ## Tools
 
@@ -72,13 +72,13 @@ Pi will use `steel_navigate` to open the page, `steel_scrape` to read the conten
 Install into Pi as a package:
 
 ```bash
-pi install npm:@steel-experiments/pi-steel
+pi install npm:@false00/pi-steel
 ```
 
 Or load it for a single run:
 
 ```bash
-pi -e npm:@steel-experiments/pi-steel
+pi -e npm:@false00/pi-steel
 ```
 
 For local development from this repo:
@@ -100,7 +100,7 @@ Steel sessions have a lifecycle tied to how Pi uses them. The default works for 
 Set the mode via environment variable:
 
 ```bash
-STEEL_SESSION_MODE=session pi -e npm:@steel-experiments/pi-steel
+STEEL_SESSION_MODE=session pi -e npm:@false00/pi-steel
 ```
 
 You can also change session persistence at runtime with `steel_pin_session` and `steel_release_session`.
