@@ -181,20 +181,68 @@ You can also change session persistence at runtime with `steel_pin_session` and 
 If you use Pi, add the following to `~/.pi/agent/AGENTS.md` to help the agent use Steel effectively:
 
 ```markdown
-## Steel browser automation
+## Using the Steel fork
 
-This agent uses `@false00/pi-steel`.
+This agent uses `@false00/pi-steel` (fork of `@steel-experiments/pi-steel`).
 
-### Reading page content
+Install:
+```
+pi install npm:@false00/pi-steel
+```
 
-- **`steel_screenshot`** — captures full-page by default. The file path appears in output; use `read` on that path to view the image.
-- **`steel_scrape`** — tool description tells you which format to use. Full content also saved to `.artifacts/scrapes/` with path in output.
-- **`steel_computer`** — screenshot path also in output when `screenshot: true`.
+Or for a single run:
+```
+pi -e npm:@false00/pi-steel "do something"
+```
 
-### Session
+## How to read page content
 
+### 1. `steel_screenshot` (best for visual content)
+
+Captures a full-page screenshot by default. **The tool output includes the file path (e.g., `.artifacts/screenshots/steel-screenshot-xxx.png`). Use the `read` tool on that path to view the image** — you can read text, headlines, and UI directly from it.
+
+Pass `fullPage: false` if you only need the viewport.
+
+### 2. `steel_scrape` with explicit format (best for structured text)
+
+Always specify the format:
+- `steel_scrape format: "text"` — plain rendered text via `innerText`, best for articles
+- `steel_scrape format: "markdown"` — use when headings, links, structure matter (search results, news listings)
+- `steel_scrape format: "html"` — only for raw DOM debugging
+
+If the output is truncated (shows `[truncated N chars]`), **read the file at the given `Path:` to get the full content** — the complete scrape is saved to `.artifacts/scrapes/`.
+
+**Never call `steel_scrape` without specifying format.**
+
+### 3. `steel_extract` with valid JSON Schema (best for structured data)
+
+Schema must be proper JSON Schema:
+```json
+{
+  "type": "object",
+  "properties": {
+    "headlines": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}
+```
+
+## Navigation & interaction
+
+- `steel_navigate` — go to a URL
+- `steel_click` — click elements (describe them, e.g. "the 'Accept All' button")
+- `steel_type` — type into fields
+- `steel_scroll` — scroll to load content
+- `steel_get_url` / `steel_get_title` — check current page state
 - `steel_pin_session` — keep browser alive across prompts
-- `steel_release_session` — close browser
+
+## Worked examples
+
+- **"latest news"** → `steel_navigate` to a news site → `steel_screenshot` → `read` the returned file path to see headlines in the image → summarize.
+- **"search for X"** → `steel_navigate` to google.com → `steel_type` the query → `steel_screenshot` → `read` the image to see results → `steel_click` on a result → `steel_screenshot` again → `read` to read the article.
+- **"get all links"** → `steel_extract` with proper schema.
 ```
 
 ## Development
