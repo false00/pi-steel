@@ -178,67 +178,7 @@ You can also change session persistence at runtime with `steel_pin_session` and 
 
 ## Agent instructions
 
-If you use Pi, add the following to `~/.pi/agent/AGENTS.md` to help the agent use Steel effectively:
-
-```markdown
-## Using the Steel fork
-
-This agent uses `@false00/pi-steel` (fork of `@steel-experiments/pi-steel`).
-
-Install:
-```
-pi install npm:@false00/pi-steel
-```
-
-Or for a single run:
-```
-pi -e npm:@false00/pi-steel "do something"
-```
-
-## How to read page content
-
-**Use `steel_screenshot` first** — it captures the full page as an image. Read the file path shown in the output to view it. This is the most reliable method because `steel_scrape` often returns CSS/JS garbage mixed with content.
-
-`steel_scrape` is a fallback for when:
-- The page is too long for a screenshot
-- You need structured data from `steel_extract`
-- The screenshot doesn't have readable text
-
-### 1. `steel_screenshot` (try this first)
-
-Captures full-page by default. File path is in output — `read` that path to view the image. Pass `fullPage: false` for viewport only.
-
-### 2. `steel_scrape` (fallback for text)
-
-Always specify format:
-- `"text"` — plain text for articles
-- `"markdown"` — headings/links/structure
-- `"html"` — raw DOM debugging
-
-If truncated (`[truncated N chars]`), `read` the file at `Path:` — full content is saved to `.artifacts/scrapes/`.
-
-**Never call `steel_scrape` without a format.**
-
-### 3. `steel_extract` (fallback for structured data)
-
-Use proper JSON Schema with `type`, `properties`, `items`.
-
-## Navigation & interaction
-
-- `steel_navigate` — go to URL
-- `steel_click` — click elements
-- `steel_type` — type into fields
-- `steel_scroll` — scroll page
-- `steel_get_url` / `steel_get_title` — check page state
-- `steel_pin_session` — keep browser alive
-
-## Worked examples
-
-- **"latest news"** → `steel_navigate` to a news site → `steel_screenshot` → `read` the returned path → summarize.
-- **"search for X"** → `steel_navigate` to google.com → `steel_type` the query → `steel_screenshot` → `read` the image → `steel_click` a result → `steel_screenshot` again → `read`.
-- **"get all links"** → `steel_extract` with proper schema.
-```
-
+Copy [`AGENTS.md`](AGENTS.md) to `~/.pi/agent/AGENTS.md` to help the agent use Steel effectively. The file contains the refined instructions including the honesty policy (no hallucination), the screenshot-first golden rule, and Google search troubleshooting.
 ## Development
 
 ```bash
