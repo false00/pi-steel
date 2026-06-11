@@ -176,6 +176,27 @@ You can also change session persistence at runtime with `steel_pin_session` and 
 
 `pi-steel` reads Steel CLI config for auth and local API resolution, and it normalizes CLI-style API URLs such as `http://localhost:3000/v1` to the SDK-compatible base URL form.
 
+## Agent instructions
+
+If you use Pi, add the following to `~/.pi/agent/AGENTS.md` to help the agent use Steel effectively:
+
+```markdown
+## Steel browser automation
+
+This agent uses `@false00/pi-steel`.
+
+### Reading page content
+
+- **`steel_screenshot`** — captures full-page by default. The file path appears in output; use `read` on that path to view the image.
+- **`steel_scrape`** — tool description tells you which format to use. Full content also saved to `.artifacts/scrapes/` with path in output.
+- **`steel_computer`** — screenshot path also in output when `screenshot: true`.
+
+### Session
+
+- `steel_pin_session` — keep browser alive across prompts
+- `steel_release_session` — close browser
+```
+
 ## Development
 
 ```bash
