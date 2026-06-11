@@ -209,6 +209,10 @@ async function extractWithBrowserEvaluate(session, format, selector) {
                     return `${clean(childText)}\n`;
                 case "br":
                     return "\n";
+                case "script":
+                case "style":
+                case "noscript":
+                    return "";
                 default:
                     return childText;
             }
