@@ -1,6 +1,12 @@
 # @false00/pi-steel
 
-> Fork of [@steel-experiments/pi-steel](https://pi.dev/packages/@steel-experiments/pi-steel) by [nibzard](https://pi.dev/nibzard) and the Steel Experiments team. All credit for the original work belongs to them.
+> Fork of [`@steel-experiments/pi-steel`](https://pi.dev/packages/@steel-experiments/pi-steel) by [nibzard](https://pi.dev/nibzard) and the Steel Experiments team. All credit for the original work belongs to them.
+
+| | Upstream | This fork |
+|---|---|---|
+| npm | [`@steel-experiments/pi-steel`](https://www.npmjs.com/package/@steel-experiments/pi-steel) | [`@false00/pi-steel`](https://www.npmjs.com/package/@false00/pi-steel) |
+| GitHub | [github.com/steel-dev/pi-steel](https://github.com/steel-dev/pi-steel) | [github.com/false00/pi-steel](https://github.com/false00/pi-steel) |
+| Pi registry | [`@steel-experiments/pi-steel`](https://pi.dev/packages/@steel-experiments/pi-steel) | — |
 
 [Steel](https://steel.dev) browser automation tools for the [Pi](https://github.com/badlogic/pi-mono) coding agent.
 
