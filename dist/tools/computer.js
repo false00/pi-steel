@@ -233,7 +233,7 @@ export function computerTool(client) {
     return {
         name: "steel_computer",
         label: "Computer Action",
-        description: "Execute low-level Steel computer actions (mouse, keyboard, scroll, screenshot)",
+        description: "Execute low-level Steel computer actions (mouse, keyboard, scroll, screenshot). When a screenshot is captured, the file path is at the end of the tool output — use read on that path to view the image.",
         parameters: Type.Object({
             action: Type.Union(SUPPORTED_ACTIONS.map((value) => Type.Literal(value)), { description: "Computer action type to execute" }),
             screenshot: Type.Optional(Type.Boolean({

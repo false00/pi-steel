@@ -390,7 +390,7 @@ export function extractTool(client) {
     return {
         name: "steel_extract",
         label: "Extract",
-        description: "Extract structured values from page content using a JSON Schema contract",
+        description: "Extract structured values from page content using a valid JSON Schema contract (must include type, properties, items as applicable). Use an object schema with typed properties.",
         parameters: Type.Object({
             schema: Type.Object({}, { additionalProperties: true, description: "JSON-Schema-like extraction contract." }),
             instructions: Type.Optional(Type.String({ description: "Optional extraction guidance used to disambiguate field selection." })),

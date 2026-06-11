@@ -191,7 +191,7 @@ export function screenshotTool(client) {
     return {
         name: "steel_screenshot",
         label: "Screenshot",
-        description: "Capture a screenshot of the current page",
+        description: "Capture a full-page screenshot (default). The file path is included at the end of the tool output — use the read tool on that path to view the image inline. Pass fullPage: false to capture only the viewport.",
         parameters: Type.Object({
             fullPage: Type.Optional(Type.Boolean({ description: "Capture full page screenshot instead of viewport-only (defaults to true in @false00/pi-steel)" })),
             selector: Type.Optional(Type.String({
