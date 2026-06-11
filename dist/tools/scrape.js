@@ -1,8 +1,13 @@
+import { promises as fs } from "node:fs";
+import path from "node:path";
+import { randomUUID } from "node:crypto";
 import { Type } from "@sinclair/typebox";
 import { sessionDetails as baseSessionDetails } from "../steel-client.js";
 import { emitProgress, throwIfAborted, withAbortSignal, withToolError, } from "./tool-runtime.js";
 import { blankPageError, isBlankPageUrl, readSessionUrl, } from "./session-state.js";
 const ALLOWED_FORMATS = ["html", "markdown", "text"];
+const RELATIVE_SCRAPE_DIR = path.join(".artifacts", "scrapes");
+const FORMAT_EXT = { html: ".html", markdown: ".md", text: ".txt" };
 const DEFAULT_FORMAT = "text";
 const DEFAULT_MAX_CHARS = 12_000;
 const MIN_MAX_CHARS = 1;
@@ -43,6 +48,32 @@ function normalizeSelector(selector) {
         throw new Error("selector cannot be empty.");
     }
     return trimmed;
+}
+async function fileExists(filePath) {
+    try {
+        await fs.access(filePath);
+        return true;
+    }
+    catch {
+        return false;
+    }
+}
+function artifactDirectory() {
+    return path.resolve(process.cwd(), RELATIVE_SCRAPE_DIR);
+}
+function toArtifactDisplayPath(filePath) {
+    const relativePath = path.relative(process.cwd(), filePath);
+    if (!relativePath || relativePath.startsWith("..")) {
+        return path.basename(filePath);
+    }
+    return relativePath;
+}
+async function makeArtifactPath(format) {
+    const dir = artifactDirectory();
+    await fs.mkdir(dir, { recursive: true });
+    const safeId = randomUUID().slice(0, 8);
+    const ext = FORMAT_EXT[format] ?? ".txt";
+    return path.join(dir, `steel-scrape-${Date.now()}-${safeId}${ext}`);
 }
 function sessionDetails(session, url, format, selector) {
     return {
@@ -280,15 +311,19 @@ export function scrapeTool(client) {
                 if (limitedResult.truncated) {
                     await emitProgress(onUpdate, "steel_scrape", `Scrape output truncated to ${maxChars} chars`);
                 }
+                const scrapePath = await makeArtifactPath(format);
+                await fs.writeFile(scrapePath, cleanedResult, "utf-8");
+                const displayPath = toArtifactDisplayPath(scrapePath);
                 await emitProgress(onUpdate, "steel_scrape", "Scrape complete");
                 return {
-                    content: [{ type: "text", text: limitedResult.text }],
+                    content: [{ type: "text", text: limitedResult.text + `\nPath: ${displayPath}` }],
                     details: {
                         ...sessionDetails(session, url, format, selector),
                         maxChars,
                         contentLength: limitedResult.text.length,
                         originalContentLength: limitedResult.originalLength,
                         truncated: limitedResult.truncated,
+                        filePath: displayPath,
                     },
                 };
             }, signal);

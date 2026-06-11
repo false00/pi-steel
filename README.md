@@ -9,6 +9,8 @@ This package publishes the Steel extension as a reusable Pi package so it can be
 ## Changes from upstream
 
 - **`steel_screenshot` now returns the file path in tool output** — the screenshot path is included in the visible text response so the LLM can use `read` on it to view the image. Upstream only included the path in `details` metadata that the LLM never sees.
+- **`steel_computer` now returns the screenshot path in tool output** — same fix as `steel_screenshot`. When a computer action captures a screenshot, the path is visible in the text response.
+- **`steel_scrape` now saves full content to disk** — the full scraped content (before truncation) is written to `.artifacts/scrapes/` as a file. The file path is included in the visible text response, so the LLM can `read` the full content when the inline output is truncated.
 
 ## Quick start
 
@@ -39,8 +41,8 @@ Pi will use `steel_navigate` to open the page, `steel_screenshot`/`steel_scrape`
 
 | Tool | Description |
 |------|-------------|
-| `steel_scrape` | Extract page content as text, markdown, or html |
-| `steel_screenshot` | Capture a screenshot artifact (path now visible to LLM) |
+| `steel_scrape` | Extract page content as text, markdown, or html (full content saved to `.artifacts/scrapes/` with path in output) |
+| `steel_screenshot` | Capture a screenshot artifact (path in output) |
 | `steel_pdf` | Generate a PDF artifact |
 | `steel_extract` | Extract structured data using a JSON schema |
 
@@ -54,7 +56,7 @@ Pi will use `steel_navigate` to open the page, `steel_screenshot`/`steel_scrape`
 | `steel_scroll` | Scroll the page or a nested container |
 | `steel_find_elements` | Find interactive elements by selector |
 | `steel_wait` | Wait for an element to appear |
-| `steel_computer` | Low-level computer action with screenshot |
+| `steel_computer` | Low-level computer action with screenshot (path in output) |
 
 ### Session management
 
@@ -64,6 +66,8 @@ Pi will use `steel_navigate` to open the page, `steel_screenshot`/`steel_scrape`
 | `steel_release_session` | Close the browser and reset to default session mode |
 
 `steel_scrape` defaults to `text`. Ask for `markdown` when headings, lists, and links matter. Ask for `html` only when raw DOM markup is actually needed.
+
+Every `steel_scrape` call saves the full content to `.artifacts/scrapes/` and includes the file path in the tool output. If the inline response is truncated, the LLM can read the file to get the complete content.
 
 `steel_scroll` can scroll the page or a nested container. For apps like Google Maps, pass a selector for the results pane instead of relying on window scrolling.
 
