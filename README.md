@@ -195,57 +195,47 @@ Or for a single run:
 pi -e npm:@false00/pi-steel "do something"
 ```
 
-## How to read page content — use screenshots first
+## How to read page content
 
-**Always start with `steel_screenshot`.** It captures the full page and you read the image inline. This is the most reliable way to understand what's on screen.
+**Use `steel_screenshot` first** — it captures the full page as an image. Read the file path shown in the output to view it. This is the most reliable method because `steel_scrape` often returns CSS/JS garbage mixed with content.
 
-Fall back to text extraction only when the page is too long, you need structured data, or the screenshot has no readable text.
+`steel_scrape` is a fallback for when:
+- The page is too long for a screenshot
+- You need structured data from `steel_extract`
+- The screenshot doesn't have readable text
 
-### 1. `steel_screenshot` (primary — try this first)
+### 1. `steel_screenshot` (try this first)
 
-Captures a full-page screenshot by default. **The tool output includes the file path (e.g., `.artifacts/screenshots/steel-screenshot-xxx.png`). Use the `read` tool on that path to view the image** — you can read text, headlines, and UI directly from it.
+Captures full-page by default. File path is in output — `read` that path to view the image. Pass `fullPage: false` for viewport only.
 
-Pass `fullPage: false` if you only need the viewport.
+### 2. `steel_scrape` (fallback for text)
 
-### 2. `steel_scrape` with explicit format (fallback for long pages)
+Always specify format:
+- `"text"` — plain text for articles
+- `"markdown"` — headings/links/structure
+- `"html"` — raw DOM debugging
 
-Always specify the format:
-- `steel_scrape format: "text"` — plain rendered text via `innerText`, best for articles
-- `steel_scrape format: "markdown"` — use when headings, links, structure matter (search results, news listings)
-- `steel_scrape format: "html"` — only for raw DOM debugging
+If truncated (`[truncated N chars]`), `read` the file at `Path:` — full content is saved to `.artifacts/scrapes/`.
 
-If the output is truncated (shows `[truncated N chars]`), **read the file at the given `Path:` to get the full content** — the complete scrape is saved to `.artifacts/scrapes/`.
+**Never call `steel_scrape` without a format.**
 
-**Never call `steel_scrape` without specifying format.**
+### 3. `steel_extract` (fallback for structured data)
 
-### 3. `steel_extract` with valid JSON Schema (best for structured data)
-
-Schema must be proper JSON Schema:
-```json
-{
-  "type": "object",
-  "properties": {
-    "headlines": {
-      "type": "array",
-      "items": { "type": "string" }
-    }
-  }
-}
-```
+Use proper JSON Schema with `type`, `properties`, `items`.
 
 ## Navigation & interaction
 
-- `steel_navigate` — go to a URL
-- `steel_click` — click elements (describe them, e.g. "the 'Accept All' button")
+- `steel_navigate` — go to URL
+- `steel_click` — click elements
 - `steel_type` — type into fields
-- `steel_scroll` — scroll to load content
-- `steel_get_url` / `steel_get_title` — check current page state
-- `steel_pin_session` — keep browser alive across prompts
+- `steel_scroll` — scroll page
+- `steel_get_url` / `steel_get_title` — check page state
+- `steel_pin_session` — keep browser alive
 
 ## Worked examples
 
-- **"latest news"** → `steel_navigate` to a news site → `steel_screenshot` → `read` the returned file path to see headlines in the image → summarize.
-- **"search for X"** → `steel_navigate` to google.com → `steel_type` the query → `steel_screenshot` → `read` the image to see results → `steel_click` on a result → `steel_screenshot` again → `read` to read the article.
+- **"latest news"** → `steel_navigate` to a news site → `steel_screenshot` → `read` the returned path → summarize.
+- **"search for X"** → `steel_navigate` to google.com → `steel_type` the query → `steel_screenshot` → `read` the image → `steel_click` a result → `steel_screenshot` again → `read`.
 - **"get all links"** → `steel_extract` with proper schema.
 ```
 
