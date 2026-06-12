@@ -57,6 +57,29 @@ function readSteelDotEnvFile() {
         return null;
     }
 }
+function ensureDotEnvFile(apiKey, baseURL) {
+    const dir = normalizeConfigDir(process.env.STEEL_CONFIG_DIR);
+    const envPath = path.join(dir, ".env");
+    if (fs.existsSync(envPath)) {
+        return;
+    }
+    try {
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+        }
+        const lines = ["# Steel configuration — created by pi-steel"];
+        if (apiKey) {
+            lines.push(`api_key=${apiKey}`);
+        }
+        if (baseURL) {
+            lines.push(`base_url=${baseURL}`);
+        }
+        fs.writeFileSync(envPath, lines.join("\n") + "\n", "utf-8");
+    }
+    catch {
+        // silently ignore — .env file is a convenience, not a requirement
+    }
+}
 function normalizeOptionalString(value) {
     if (typeof value !== "string") {
         return undefined;
@@ -316,6 +339,7 @@ export class SteelClient {
     creatingSession = null;
     constructor(apiKey, options = {}) {
         const runtimeConfig = resolveSteelRuntimeConfig(options.apiKey ?? apiKey, options.baseURL);
+        ensureDotEnvFile(runtimeConfig.apiKey, runtimeConfig.baseURL);
         const configuredTimeout = options.sessionTimeoutMs === undefined
             ? undefined
             : Number(options.sessionTimeoutMs);
