@@ -281,7 +281,7 @@ export function scrapeTool(client) {
     return {
         name: "steel_scrape",
         label: "Scrape",
-        description: "Extract readable current page content. Always specify the format: text for answering questions, markdown when headings/links/structure matter, html only for raw DOM debugging. Full content is saved to .artifacts/scrapes/. If the output is truncated (shows [truncated N chars]), read the file at the given Path to get the full content.",
+        description: "Extract readable current page content. Always specify the format: text for answering questions, markdown when headings/links/structure matter, html only for raw DOM debugging. Full content is saved to the local cache (path in output). If the output is truncated (shows [truncated N chars]), read the file at the given Path to get the full content.",
         parameters: Type.Object({
             format: Type.Optional(Type.Union([Type.Literal("html"), Type.Literal("markdown"), Type.Literal("text")], { description: "Output format. Prefer text for concise reading, markdown to preserve headings/lists/links, and html only when raw DOM markup is specifically needed." })),
             selector: Type.Optional(Type.String({ description: "Optional CSS selector to scope extraction to a specific element before converting to the requested output format" })),

@@ -15,9 +15,9 @@ This package publishes the Steel extension as a reusable Pi package so it can be
 ## Changes from upstream
 
 - **`steel_screenshot` now returns the file path in tool output** — the screenshot path is included in the visible text response so the LLM can use `read` on it to view the image. Upstream only included the path in `details` metadata that the LLM never sees.
-- **`steel_screenshot` defaults to `fullPage: true`** — captures the entire page by default instead of just the viewport. Pass `fullPage: false` if you only need the viewport.
+- **`steel_screenshot` defaults to `fullPage: false`** — captures only the viewport by default. Pass `fullPage: true` to capture the full page.
 - **`steel_computer` now returns the screenshot path in tool output** — same fix as `steel_screenshot`. When a computer action captures a screenshot, the path is visible in the text response.
-- **`steel_scrape` now saves full content to disk** — the full scraped content (before truncation) is written to `.artifacts/scrapes/` as a file. The file path is included in the visible text response, so the LLM can `read` the full content when the inline output is truncated.
+- **`steel_scrape` now saves full content to disk** — the full scraped content (before truncation) is written to `~/.cache/.steel-browser/scrapes/` as a file. The file path is included in the visible text response, so the LLM can `read` the full content when the inline output is truncated.
 
 ## Quick start
 
@@ -48,7 +48,7 @@ Pi will use `steel_navigate` to open the page, `steel_screenshot`/`steel_scrape`
 
 | Tool | Description |
 |------|-------------|
-| `steel_scrape` | Extract page content as text, markdown, or html (full content saved to `.artifacts/scrapes/` with path in output) |
+| `steel_scrape` | Extract page content as text, markdown, or html (full content saved to disk with path in output) |
 | `steel_screenshot` | Capture a screenshot artifact (path in output) |
 | `steel_pdf` | Generate a PDF artifact |
 | `steel_extract` | Extract structured data using a JSON schema |
@@ -74,7 +74,7 @@ Pi will use `steel_navigate` to open the page, `steel_screenshot`/`steel_scrape`
 
 `steel_scrape` defaults to `text`. Ask for `markdown` when headings, lists, and links matter. Ask for `html` only when raw DOM markup is actually needed.
 
-Every `steel_scrape` call saves the full content to `.artifacts/scrapes/` and includes the file path in the tool output. If the inline response is truncated, the LLM can read the file to get the complete content.
+Every `steel_scrape` call saves the full content to `~/.cache/.steel-browser/scrapes/` and includes the file path in the tool output. If the inline response is truncated, the LLM can read the file to get the complete content.
 
 `steel_scroll` can scroll the page or a nested container. For apps like Google Maps, pass a selector for the results pane instead of relying on window scrolling.
 
