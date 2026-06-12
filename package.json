@@ -1,6 +1,6 @@
 {
   "name": "@false00/pi-steel",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "description": "Fork of @steel-experiments/pi-steel — Steel browser automation extension for Pi",
   "type": "module",
   "main": "dist/index.js",
