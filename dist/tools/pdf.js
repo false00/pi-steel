@@ -1,10 +1,11 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import os from "node:os";
 import { randomUUID } from "node:crypto";
 import { Type } from "@sinclair/typebox";
 import { sessionDetails as baseSessionDetails } from "../steel-client.js";
 import { emitProgress, throwIfAborted, withAbortSignal, withToolError, } from "./tool-runtime.js";
-const RELATIVE_PDF_DIR = path.join(".artifacts", "pdfs");
+const RELATIVE_PDF_DIR = path.join(".steel-browser", "pdfs");
 const DEFAULT_PDF_OPTIONS = {
     printBackground: true,
     preferCSSPageSize: true,
@@ -16,14 +17,10 @@ function sessionDetails(session, url) {
     };
 }
 function artifactDirectory() {
-    return path.resolve(process.cwd(), RELATIVE_PDF_DIR);
+    return path.resolve(os.homedir(), ".cache", RELATIVE_PDF_DIR);
 }
 function toArtifactDisplayPath(filePath) {
-    const relativePath = path.relative(process.cwd(), filePath);
-    if (!relativePath || relativePath.startsWith("..")) {
-        return path.basename(filePath);
-    }
-    return relativePath;
+    return filePath;
 }
 async function makeArtifactPath() {
     const dir = artifactDirectory();

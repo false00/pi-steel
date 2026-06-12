@@ -1,12 +1,13 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import os from "node:os";
 import { randomUUID } from "node:crypto";
 import { Type } from "@sinclair/typebox";
 import { sessionDetails as baseSessionDetails } from "../steel-client.js";
 import { emitProgress, throwIfAborted, withAbortSignal, withToolError, } from "./tool-runtime.js";
 import { blankPageError, isBlankPageUrl, readSessionUrl, } from "./session-state.js";
 const ALLOWED_FORMATS = ["html", "markdown", "text"];
-const RELATIVE_SCRAPE_DIR = path.join(".artifacts", "scrapes");
+const RELATIVE_SCRAPE_DIR = path.join(".steel-browser", "scrapes");
 const FORMAT_EXT = { html: ".html", markdown: ".md", text: ".txt" };
 const DEFAULT_FORMAT = "text";
 const DEFAULT_MAX_CHARS = 12_000;
@@ -59,14 +60,10 @@ async function fileExists(filePath) {
     }
 }
 function artifactDirectory() {
-    return path.resolve(process.cwd(), RELATIVE_SCRAPE_DIR);
+    return path.resolve(os.homedir(), ".cache", RELATIVE_SCRAPE_DIR);
 }
 function toArtifactDisplayPath(filePath) {
-    const relativePath = path.relative(process.cwd(), filePath);
-    if (!relativePath || relativePath.startsWith("..")) {
-        return path.basename(filePath);
-    }
-    return relativePath;
+    return filePath;
 }
 async function makeArtifactPath(format) {
     const dir = artifactDirectory();

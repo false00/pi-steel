@@ -1,12 +1,13 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import os from "node:os";
 import { randomUUID } from "node:crypto";
 import { Type } from "@sinclair/typebox";
 import { sessionDetails as baseSessionDetails } from "../steel-client.js";
 import { emitProgress, throwIfAborted, withAbortSignal, withToolError, } from "./tool-runtime.js";
 import { MAX_TOOL_TIMEOUT_MS, resolveToolTimeoutMs, } from "./tool-settings.js";
 const DEFAULT_FULL_PAGE = false;
-const RELATIVE_SCREENSHOT_DIR = path.join(".artifacts", "screenshots");
+const RELATIVE_SCREENSHOT_DIR = path.join(".steel-browser", "screenshots");
 function sessionDetails(session, url, selector, fullPage) {
     return {
         ...baseSessionDetails(session),
@@ -29,7 +30,7 @@ function resolveTimeoutMs(rawTimeout) {
     return resolveToolTimeoutMs(rawTimeout);
 }
 function normalizeFullPage(fullPage) {
-    return fullPage !== false;
+    return fullPage === true;
 }
 async function readSessionUrl(session) {
     const direct = session.url;
@@ -61,14 +62,10 @@ async function fileExists(filePath) {
     }
 }
 function artifactDirectory() {
-    return path.resolve(process.cwd(), RELATIVE_SCREENSHOT_DIR);
+    return path.resolve(os.homedir(), ".cache", RELATIVE_SCREENSHOT_DIR);
 }
 function toArtifactDisplayPath(filePath) {
-    const relativePath = path.relative(process.cwd(), filePath);
-    if (!relativePath || relativePath.startsWith("..")) {
-        return path.basename(filePath);
-    }
-    return relativePath;
+    return filePath;
 }
 async function makeArtifactPath() {
     const dir = artifactDirectory();
@@ -191,9 +188,9 @@ export function screenshotTool(client) {
     return {
         name: "steel_screenshot",
         label: "Screenshot",
-        description: "Capture a full-page screenshot (default). The file path is shown at the end of the output — read that path to view the image. Pass fullPage: false to capture only the viewport.",
+        description: "Capture a viewport screenshot (default). Pass fullPage: true to capture the full page. The file path is shown at the end of the output — read that path to view the image.",
         parameters: Type.Object({
-            fullPage: Type.Optional(Type.Boolean({ description: "Capture full page screenshot instead of viewport-only (defaults to true in @false00/pi-steel)" })),
+            fullPage: Type.Optional(Type.Boolean({ description: "Capture full page screenshot instead of viewport-only (defaults to false)" })),
             selector: Type.Optional(Type.String({
                 description: "Optional CSS selector to capture a single element instead of full page",
             })),

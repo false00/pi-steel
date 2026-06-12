@@ -176,9 +176,6 @@ You can also change session persistence at runtime with `steel_pin_session` and 
 
 `pi-steel` reads Steel CLI config for auth and local API resolution, and it normalizes CLI-style API URLs such as `http://localhost:3000/v1` to the SDK-compatible base URL form.
 
-## Agent instructions
-
-Copy [`AGENTS.md`](AGENTS.md) to `~/.pi/agent/AGENTS.md` to help the agent use Steel effectively. The file contains the refined instructions including the honesty policy (no hallucination), the screenshot-first golden rule, and Google search troubleshooting.
 ## Development
 
 ```bash
