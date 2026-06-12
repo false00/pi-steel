@@ -29,6 +29,34 @@ function readSteelConfigFile() {
         return null;
     }
 }
+function readSteelDotEnvFile() {
+    const envPath = path.join(normalizeConfigDir(process.env.STEEL_CONFIG_DIR), ".env");
+    try {
+        const contents = fs.readFileSync(envPath, "utf-8");
+        const env = {};
+        for (const line of contents.split(/\r?\n/)) {
+            const trimmed = line.trim();
+            if (!trimmed || trimmed.startsWith("#")) {
+                continue;
+            }
+            const eqIndex = trimmed.indexOf("=");
+            if (eqIndex === -1) {
+                continue;
+            }
+            let key = trimmed.slice(0, eqIndex).trim();
+            let value = trimmed.slice(eqIndex + 1).trim();
+            if ((value.startsWith('"') && value.endsWith('"')) ||
+                (value.startsWith("'") && value.endsWith("'"))) {
+                value = value.slice(1, -1);
+            }
+            env[key.toLowerCase()] = value || undefined;
+        }
+        return env;
+    }
+    catch {
+        return null;
+    }
+}
 function normalizeOptionalString(value) {
     if (typeof value !== "string") {
         return undefined;
@@ -75,18 +103,22 @@ function resolveViewerBaseURL(baseURL, overridden) {
     return undefined;
 }
 function resolveSteelRuntimeConfig(apiKeyOverride, baseURLOverride) {
+    const dotEnv = readSteelDotEnvFile();
+    const dotEnvApiKey = normalizeOptionalString(dotEnv?.api_key);
+    const dotEnvBaseURL = normalizeOptionalString(dotEnv?.base_url);
     const config = readSteelConfigFile();
     const configApiKey = normalizeOptionalString(config?.apiKey);
     const configBrowserApiUrl = normalizeOptionalString(config?.browser?.apiUrl);
     const explicitApiKey = normalizeOptionalString(apiKeyOverride ?? undefined);
     const envApiKey = normalizeOptionalString(process.env.STEEL_API_KEY);
-    const resolvedApiKey = explicitApiKey ?? envApiKey ?? configApiKey ?? null;
+    const resolvedApiKey = dotEnvApiKey ?? explicitApiKey ?? envApiKey ?? configApiKey ?? null;
     const explicitBaseURL = normalizeOptionalString(baseURLOverride);
     const envBaseURL = normalizeOptionalString(process.env.STEEL_BASE_URL);
     const envBrowserApiURL = normalizeOptionalString(process.env.STEEL_BROWSER_API_URL);
     const envLocalApiURL = normalizeOptionalString(process.env.STEEL_LOCAL_API_URL);
     const envApiURL = normalizeOptionalString(process.env.STEEL_API_URL);
-    const rawBaseURL = explicitBaseURL ??
+    const rawBaseURL = dotEnvBaseURL ??
+        explicitBaseURL ??
         envBaseURL ??
         envBrowserApiURL ??
         envLocalApiURL ??

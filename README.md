@@ -122,9 +122,19 @@ You can also change session persistence at runtime with `steel_pin_session` and 
 
 - Node.js 20+
 - A Pi runtime that supports extensions
-- Steel authentication via either:
+- Steel authentication via one of:
+  - `.env` file in `~/.config/steel/` (highest priority), or
   - `STEEL_API_KEY`, or
   - `steel login` config in `~/.config/steel/config.json`
+
+You can also create a `~/.config/steel/.env` file to set your API key and base URL:
+
+```env
+api_key=your-steel-api-key
+base_url=https://your-selfhosted-steel-instance.com
+```
+
+Values in this file take precedence over all other configuration sources, including environment variables and constructor parameters.
 
 ### Environment variables
 
@@ -132,6 +142,7 @@ You can also change session persistence at runtime with `steel_pin_session` and 
 
 | Variable | Purpose |
 |----------|---------|
+| `~/.config/steel/.env` | `api_key` and `base_url` values (highest priority) |
 | `STEEL_BASE_URL` | Steel API base URL |
 | `STEEL_BROWSER_API_URL` | Browser API endpoint |
 | `STEEL_LOCAL_API_URL` | Local Steel instance URL |
