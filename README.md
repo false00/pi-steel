@@ -14,10 +14,10 @@ This package publishes the Steel extension as a reusable Pi package so it can be
 
 ## Changes from upstream
 
-- **`steel_screenshot` now returns the file path in tool output** — the screenshot path is included in the visible text response so the LLM can use `read` on it to view the image. Upstream only included the path in `details` metadata that the LLM never sees.
-- **`steel_screenshot` defaults to `fullPage: false`** — captures only the viewport by default. Pass `fullPage: true` to capture the full page.
-- **`steel_computer` now returns the screenshot path in tool output** — same fix as `steel_screenshot`. When a computer action captures a screenshot, the path is visible in the text response.
-- **`steel_scrape` now saves full content to disk** — the full scraped content (before truncation) is written to `~/.cache/.steel-browser/scrapes/` as a file. The file path is included in the visible text response, so the LLM can `read` the full content when the inline output is truncated.
+- **`.env` file support** — `~/.config/steel/.env` is read as the highest-priority config source for `api_key` and `base_url`. Auto-created on first run with discovered values so you don't have to set env vars every time.
+- **Tool output paths** — `steel_screenshot`, `steel_computer`, and `steel_scrape` all append `\nPath: {absolute-path}` to their visible text output so the LLM can `read` the artifact directly. Upstream hid these paths in `details` metadata that the agent never sees.
+- **`steel_scrape` saves full content to disk** — the untruncated scraped content is written to `~/.cache/.steel-browser/scrapes/` before the inline output is trimmed. When the response shows `[truncated N chars]`, the LLM can `read` the file for the complete content.
+- **Artifact directories moved** — screenshots and PDFs are saved under `~/.cache/.steel-browser/` instead of `$CWD/.artifacts/`, keeping build artifacts out of project directories.
 
 ## Quick start
 
@@ -191,15 +191,26 @@ Values in this file take precedence over all other configuration sources, includ
 
 ```bash
 npm install
-npm run build
-npm test
+npm run build   # requires tsconfig.json — only if you have TS source
+npm test        # requires tsconfig.json — may not work in this fork
 ```
 
-Publish preflight:
+### Publishing
+
+This fork's `dist/` is the source of truth (no TS source files). The `npm test` and `prepublishOnly` scripts require a `tsconfig.json` that doesn't exist in this repo, so publish with `--ignore-scripts`.
 
 ```bash
+# 1. Bump version and create git tag
+npm version patch   # or minor / major
+
+# 2. Verify package contents
 npm pack --dry-run
+
+# 3. Publish (skips broken prepublishOnly script)
+npm publish --ignore-scripts
 ```
+
+If 2FA is enabled, npm will prompt you to authenticate in the browser before publishing.
 
 The package manifest in `package.json` exposes the compiled extension entrypoint via `pi.extensions`, which lets Pi load the package root directly after install.
 
