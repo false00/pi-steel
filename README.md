@@ -15,8 +15,8 @@ This package publishes the Steel extension as a reusable Pi package so it can be
 ## Changes from upstream
 
 - **`.env` file support** — `~/.config/steel/.env` is read as the highest-priority config source for `api_key` and `base_url`. Auto-created on first run with discovered values so you don't have to set env vars every time.
-- **Tool output paths** — `steel_screenshot`, `steel_computer`, and `steel_scrape` all append `\nPath: {absolute-path}` to their visible text output so the LLM can `read` the artifact directly. Upstream hid these paths in `details` metadata that the agent never sees.
-- **`steel_scrape` saves full content to disk** — the untruncated scraped content is written to `~/.cache/.steel-browser/scrapes/` before the inline output is trimmed. When the response shows `[truncated N chars]`, the LLM can `read` the file for the complete content.
+- **Tool output paths with explicit Read tool instructions** — `steel_screenshot`, `steel_computer`, and `steel_scrape` all append the file path with an explicit instruction to use the Read tool (e.g. `Use the Read tool to view the image: /path/to/file`). Upstream hid these paths in `details` metadata that the agent never sees.
+- **`steel_scrape` saves full content to disk** — the untruncated scraped content is written to `~/.cache/.steel-browser/scrapes/` before the inline output is trimmed. When the response shows `[truncated N chars]`, the output includes `[Output truncated. Read the full content with the Read tool: /path/to/file]`.
 - **Artifact directories moved** — screenshots and PDFs are saved under `~/.cache/.steel-browser/` instead of `$CWD/.artifacts/`, keeping build artifacts out of project directories.
 
 ## Quick start
@@ -74,7 +74,7 @@ Pi will use `steel_navigate` to open the page, `steel_screenshot`/`steel_scrape`
 
 `steel_scrape` defaults to `text`. Ask for `markdown` when headings, lists, and links matter. Ask for `html` only when raw DOM markup is actually needed.
 
-Every `steel_scrape` call saves the full content to `~/.cache/.steel-browser/scrapes/` and includes the file path in the tool output. If the inline response is truncated, the LLM can read the file to get the complete content.
+Every `steel_scrape` call saves the full content to `~/.cache/.steel-browser/scrapes/` and includes the file path in the tool output. If the inline response is truncated, the output includes an explicit instruction to use the Read tool to view the full content.
 
 `steel_scroll` can scroll the page or a nested container. For apps like Google Maps, pass a selector for the results pane instead of relying on window scrolling.
 
