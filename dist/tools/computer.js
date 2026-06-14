@@ -233,7 +233,7 @@ export function computerTool(client) {
     return {
         name: "steel_computer",
         label: "Computer Action",
-        description: "Execute low-level Steel computer actions (mouse, keyboard, scroll, screenshot). When a screenshot is captured, the image path is at the end of the output — use the Read tool to view the image from that path.",
+        description: "Execute low-level Steel computer actions (mouse, keyboard, scroll, screenshot). When a screenshot is captured, the file path is at the end of the output — read that path to view the image.",
         parameters: Type.Object({
             action: Type.Union(SUPPORTED_ACTIONS.map((value) => Type.Literal(value)), { description: "Computer action type to execute" }),
             screenshot: Type.Optional(Type.Boolean({
@@ -298,7 +298,7 @@ export function computerTool(client) {
                     .filter((item) => typeof item === "string" && item.trim().length > 0)
                     .map((item) => item.trim());
                 const outputSuffix = outputParts.length > 0 ? ` ${outputParts.join(" ")}` : "";
-                const artifactSuffix = artifact ? `\n\nUse the Read tool to view the screenshot: ${artifact.path}` : "";
+                const artifactSuffix = artifact ? `\nPath: ${artifact.path}` : "";
                 return {
                     content: [
                         {

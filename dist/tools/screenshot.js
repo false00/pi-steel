@@ -188,7 +188,7 @@ export function screenshotTool(client) {
     return {
         name: "steel_screenshot",
         label: "Screenshot",
-        description: "Capture a viewport screenshot (default). Pass fullPage: true to capture the full page. The image path is at the end of the output — use the Read tool to view the image from that path.",
+        description: "Capture a viewport screenshot (default). Pass fullPage: true to capture the full page. The file path is shown at the end of the output — read that path to view the image.",
         parameters: Type.Object({
             fullPage: Type.Optional(Type.Boolean({ description: "Capture full page screenshot instead of viewport-only (defaults to false)" })),
             selector: Type.Optional(Type.String({
@@ -233,7 +233,7 @@ export function screenshotTool(client) {
                         ? "Captured full-page screenshot"
                         : "Captured viewport screenshot";
                 return {
-                    content: [{ type: "text", text: contentText + `\n\nUse the Read tool to view the image: ${displayPath}` }],
+                    content: [{ type: "text", text: contentText + `\nPath: ${displayPath}` }],
                     details: {
                         ...sessionDetails(session, url, selector, fullPage),
                         filePath: displayPath,
