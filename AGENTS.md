@@ -15,6 +15,7 @@ Fork of `@steel-experiments/pi-steel` — Steel browser automation extension for
 - **Session modes** — `agent` (default), `session`, `turn` — controlled via `STEEL_SESSION_MODE`
 - **Config priority** — `.env` file > constructor params > env vars > Steel CLI config
 - **Error handling** — tools use `withToolError()` wrapper for consistent error reporting
+- **Read tool instructions** — all artifact paths in tool output are prefixed with an explicit instruction to use the Read tool (e.g. `Use the Read tool to view the image: /path`), and `steel_scrape` shows `[Output truncated. Read the full content with the Read tool: /path]` when the inline response is truncated.
 
 ## Documentation rules
 
