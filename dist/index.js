@@ -1,3 +1,6 @@
+import { promises as fs } from "node:fs";
+import path from "node:path";
+import os from "node:os";
 import { resolveSessionMode } from "./session-mode.js";
 import { SteelClient } from "./steel-client.js";
 import { clickTool } from "./tools/click.js";
@@ -66,6 +69,34 @@ export default function steelExtension(pi) {
     for (const tool of tools) {
         pi.registerTool(tool);
     }
+    const CACHE_DIRS = [
+        path.join(os.homedir(), ".cache", ".steel-browser", "screenshots"),
+        path.join(os.homedir(), ".cache", ".steel-browser", "scrapes"),
+        path.join(os.homedir(), ".cache", ".steel-browser", "pdfs"),
+    ];
+    pi.registerCommand("clear_webcache", {
+        description: "Delete all Steel browser artifacts (screenshots, scrapes, PDFs)",
+        handler: async (_args, ctx) => {
+            let deleted = 0;
+            let errors = 0;
+            for (const dir of CACHE_DIRS) {
+                try {
+                    const entries = await fs.readdir(dir);
+                    await Promise.all(entries.map((entry) => fs.rm(path.join(dir, entry), { force: true, recursive: true })));
+                    deleted += entries.length;
+                }
+                catch (err) {
+                    if (err?.code !== "ENOENT") {
+                        errors++;
+                    }
+                }
+            }
+            const msg = errors > 0
+                ? `Cleared ${deleted} files (${errors} errors)`
+                : `Cleared ${deleted} file(s)`;
+            ctx.ui.notify(msg, "info");
+        },
+    });
     pi.on("turn_end", async () => {
         if (sessionMode === "turn") {
             await closeSessions("turn_end");

@@ -1,10 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import os from "node:os";
 import { Type } from "@sinclair/typebox";
 import { sessionDetails } from "../steel-client.js";
 import { emitProgress, throwIfAborted, withAbortSignal, withToolError, } from "./tool-runtime.js";
-const RELATIVE_SCREENSHOT_DIR = path.join(".artifacts", "screenshots");
+const RELATIVE_SCREENSHOT_DIR = path.join(".steel-browser", "screenshots");
 const SUPPORTED_ACTIONS = [
     "move_mouse",
     "click_mouse",
@@ -186,18 +187,14 @@ function buildActionRequest(params) {
             throw new Error(`Unsupported action "${action}".`);
     }
 }
-function screenshotDirectory() {
-    return path.resolve(process.cwd(), RELATIVE_SCREENSHOT_DIR);
+function artifactDirectory() {
+    return path.resolve(os.homedir(), ".cache", RELATIVE_SCREENSHOT_DIR);
 }
 function toArtifactDisplayPath(filePath) {
-    const relativePath = path.relative(process.cwd(), filePath);
-    if (!relativePath || relativePath.startsWith("..")) {
-        return path.basename(filePath);
-    }
-    return relativePath;
+    return filePath;
 }
 async function createScreenshotPath() {
-    const dir = screenshotDirectory();
+    const dir = artifactDirectory();
     await fs.mkdir(dir, { recursive: true });
     const safeId = randomUUID().slice(0, 8);
     return path.join(dir, `steel-computer-${Date.now()}-${safeId}.png`);
@@ -233,7 +230,7 @@ export function computerTool(client) {
     return {
         name: "steel_computer",
         label: "Computer Action",
-        description: "Execute low-level Steel computer actions (mouse, keyboard, scroll, screenshot). When a screenshot is captured, the image path is at the end of the output — use the Read tool to view the image from that path.",
+        description: "Execute low-level computer actions (mouse, keyboard, scroll, screenshot) by sending raw input events to the browser. Requires a paid Steel plan — self-hosted instances do not support this endpoint. Coordinates are [x, y] pixel positions relative to the page. Pass `screenshot: true` on most actions to return a screenshot after the action. Supported actions:\n  - move_mouse: requires `coordinates`\n  - click_mouse: requires `coordinates` + `button` (left|right|middle|back|forward); optional `click_type` (click|down|up), `num_clicks`\n  - drag_mouse: requires `path` (array of 2+ [x,y] points)\n  - scroll: requires `delta_x` and/or `delta_y`; optional `coordinates`\n  - press_key: requires `keys` (array of key names); optional `duration`\n  - type_text: requires `text`\n  - wait: requires `duration` (seconds)\n  - take_screenshot: no extra params\n  - get_cursor_position: no extra params\nWhen a screenshot is captured, the image path is at the end of the output — use the Read tool to view the image from that path.",
         parameters: Type.Object({
             action: Type.Union(SUPPORTED_ACTIONS.map((value) => Type.Literal(value)), { description: "Computer action type to execute" }),
             screenshot: Type.Optional(Type.Boolean({
@@ -285,7 +282,17 @@ export function computerTool(client) {
                 }
                 const requestBody = buildActionRequest(params);
                 await emitProgress(onUpdate, "steel_computer", `Dispatching ${requestBody.action}`);
-                const response = await withAbortSignal(session.computer(requestBody), signal);
+                let response;
+                try {
+                    response = await withAbortSignal(session.computer(requestBody), signal);
+                }
+                catch (err) {
+                    const is404 = err?.status === 404 || (err?.message && err.message.includes("Not Found"));
+                    if (is404) {
+                        throw new Error("Computer actions require a paid Steel plan. Self-hosted instances do not support this endpoint. Use steel_click, steel_screenshot, steel_scroll, or steel_type instead.");
+                    }
+                    throw err;
+                }
                 if (response.error) {
                     throw new Error(response.error);
                 }

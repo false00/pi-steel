@@ -17,7 +17,9 @@ This package publishes the Steel extension as a reusable Pi package so it can be
 - **`.env` file support** — `~/.config/steel/.env` is read as the highest-priority config source for `api_key` and `base_url`. Auto-created on first run with discovered values so you don't have to set env vars every time.
 - **Tool output paths with explicit Read tool instructions** — `steel_screenshot`, `steel_computer`, and `steel_scrape` all append the file path with an explicit instruction to use the Read tool (e.g. `Use the Read tool to view the image: /path/to/file`). Upstream hid these paths in `details` metadata that the agent never sees.
 - **`steel_scrape` saves full content to disk** — the untruncated scraped content is written to `~/.cache/.steel-browser/scrapes/` before the inline output is trimmed. When the response shows `[truncated N chars]`, the output includes `[Output truncated. Read the full content with the Read tool: /path/to/file]`.
+- **`steel_computer` requires a paid Steel plan** — the computer actions endpoint (`/v1/sessions/{id}/computer`) is only available on Steel's cloud plan. Self-hosted instances do not support it. The tool will return a clear error explaining this.
 - **Artifact directories moved** — screenshots and PDFs are saved under `~/.cache/.steel-browser/` instead of `$CWD/.artifacts/`, keeping build artifacts out of project directories.
+- **`/clear_webcache` command** — a slash command that deletes all cached artifacts (screenshots, scrapes, PDFs) from `~/.cache/.steel-browser/`. Shows a notification with the count of deleted files.
 
 ## Quick start
 
