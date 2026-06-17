@@ -1,47 +1,67 @@
 # @false00/pi-steel
 
-> Fork of [`@steel-experiments/pi-steel`](https://pi.dev/packages/@steel-experiments/pi-steel) by [nibzard](https://pi.dev/nibzard) and the Steel Experiments team. All credit for the original work belongs to them.
+[![npm version](https://img.shields.io/npm/v/@false00/pi-steel.svg)](https://www.npmjs.com/package/@false00/pi-steel)
+[![license](https://img.shields.io/npm/l/@false00/pi-steel.svg)](LICENSE)
+[![CI](https://github.com/false00/pi-steel/actions/workflows/ci.yml/badge.svg)](https://github.com/false00/pi-steel/actions/workflows/ci.yml)
 
-| | Upstream | This fork |
-|---|---|---|
-| npm | [`@steel-experiments/pi-steel`](https://www.npmjs.com/package/@steel-experiments/pi-steel) | [`@false00/pi-steel`](https://www.npmjs.com/package/@false00/pi-steel) |
-| GitHub | [github.com/steel-dev/pi-steel](https://github.com/steel-dev/pi-steel) | [github.com/false00/pi-steel](https://github.com/false00/pi-steel) |
-| Pi registry | [`@steel-experiments/pi-steel`](https://pi.dev/packages/@steel-experiments/pi-steel) | — |
+Production-focused Steel browser automation for the Pi coding agent.
 
-[Steel](https://steel.dev) browser automation tools for the [Pi](https://github.com/badlogic/pi-mono) coding agent.
+> Fork of [`@steel-experiments/pi-steel`](https://www.npmjs.com/package/@steel-experiments/pi-steel). Original credit belongs to nibzard and the Steel Experiments team.
 
-This package publishes the Steel extension as a reusable Pi package so it can be installed directly into Pi or consumed by other runtimes such as Takopi-based wrappers.
+`@false00/pi-steel` exposes **17 Pi tools** for browser navigation, screenshots, scraping, structured extraction, form interaction, low-level computer actions, and browser-session lifecycle control.
+
+| Resource | Link |
+|---|---|
+| npm | [`@false00/pi-steel`](https://www.npmjs.com/package/@false00/pi-steel) |
+| GitHub | [github.com/false00/pi-steel](https://github.com/false00/pi-steel) |
+| License | [MIT](LICENSE) |
+| Changelog | [CHANGELOG.md](CHANGELOG.md) |
+| Security policy | [SECURITY.md](SECURITY.md) |
+| Compatibility notes | [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md) |
+| Examples | [docs/EXAMPLES.md](docs/EXAMPLES.md) |
+| Troubleshooting | [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) |
+| Contributing guide | [CONTRIBUTING.md](CONTRIBUTING.md) |
+
+## Why this package
+
+This fork is aimed at people who want Pi browsing to feel stable, readable, and operationally friendly instead of feeling like a thin demo wrapper.
+
+What it emphasizes:
+
+- **Pi-friendly output** — screenshot, scrape, PDF, and computer tools return artifact paths in plain tool output so agents can actually read them
+- **Safer fresh installs** — missing Steel credentials no longer break extension loading; the package creates a template `~/.config/steel/.env` and tells the user what to update
+- **Cleaner local state** — artifacts live under `~/.cache/.steel-browser/` instead of cluttering project directories
+- **Session lifecycle control** — default per-agent sessions plus explicit pin/release tools and session-mode configuration
+- **Publishable package hygiene** — CI, changelog, security policy, contributing guide, docs, and package tests
 
 ## Changes from upstream
 
-- **`.env` file support** — `~/.config/steel/.env` is read as the highest-priority config source for `api_key` and `base_url`. Auto-created on first run with discovered values so you don't have to set env vars every time.
-- **Tool output paths with explicit Read tool instructions** — `steel_screenshot`, `steel_computer`, and `steel_scrape` all append the file path with an explicit instruction to use the Read tool (e.g. `Use the Read tool to view the image: /path/to/file`). Upstream hid these paths in `details` metadata that the agent never sees.
-- **`steel_scrape` saves full content to disk** — the untruncated scraped content is written to `~/.cache/.steel-browser/scrapes/` before the inline output is trimmed. When the response shows `[truncated N chars]`, the output includes `[Output truncated. Read the full content with the Read tool: /path/to/file]`.
-- **`steel_computer` requires a paid Steel plan** — the computer actions endpoint (`/v1/sessions/{id}/computer`) is only available on Steel's cloud plan. Self-hosted instances do not support it. The tool will return a clear error explaining this.
-- **Artifact directories moved** — screenshots and PDFs are saved under `~/.cache/.steel-browser/` instead of `$CWD/.artifacts/`, keeping build artifacts out of project directories.
-- **`/clear_webcache` command** — a slash command that deletes all cached artifacts (screenshots, scrapes, PDFs) from `~/.cache/.steel-browser/`. Shows a notification with the count of deleted files.
+This fork currently adds or changes the following behavior:
 
-## Quick start
+- **`.env` file support** — `~/.config/steel/.env` is read as the highest-priority config source for `api_key` and `base_url`
+- **Fresh-install template creation** — if the file is missing, `pi-steel` creates a template and tells the user to update it
+- **Lazy Steel initialization** — the extension loads even when credentials are missing; the failure is deferred until the first Steel tool call
+- **Clearer error guidance** — configuration failures tell the user to update `~/.config/steel/.env` or run `steel login`
+- **Read-tool-friendly artifact paths** — screenshot, scrape, PDF, and computer outputs include explicit file paths in visible tool output
+- **Full scrape persistence** — `steel_scrape` writes the complete content to disk before truncating inline output
+- **Artifact directory relocation** — screenshots, scrapes, and PDFs are stored under `~/.cache/.steel-browser/`
+- **`/clear_webcache` command** — deletes cached Steel artifacts from the local cache directory
 
-```bash
-pi install npm:@false00/pi-steel
-```
+## Tool coverage
 
-Then just ask Pi to browse:
-
-```
-> Go to hacker news and find the top story
-```
-
-Pi will use `steel_navigate` to open the page, `steel_screenshot`/`steel_scrape` to read the content, and return what it finds. All session management happens automatically.
-
-## Tools
+| Area | Tool count |
+|---|---:|
+| Navigation | 4 |
+| Content extraction | 4 |
+| Interaction | 7 |
+| Session management | 2 |
+| **Total** | **17** |
 
 ### Navigation
 
 | Tool | Description |
-|------|-------------|
-| `steel_navigate` | Open a URL with automatic scheme normalization and retry logic |
+|---|---|
+| `steel_navigate` | Open a URL with normalization and retry logic |
 | `steel_go_back` | Navigate back in browser history |
 | `steel_get_url` | Read the current page URL |
 | `steel_get_title` | Read the current page title |
@@ -49,36 +69,30 @@ Pi will use `steel_navigate` to open the page, `steel_screenshot`/`steel_scrape`
 ### Content extraction
 
 | Tool | Description |
-|------|-------------|
-| `steel_scrape` | Extract page content as text, markdown, or html (full content saved to disk with path in output) |
-| `steel_screenshot` | Capture a screenshot artifact (path in output) |
+|---|---|
+| `steel_scrape` | Extract page content as text, markdown, or html |
+| `steel_screenshot` | Capture a screenshot artifact |
 | `steel_pdf` | Generate a PDF artifact |
 | `steel_extract` | Extract structured data using a JSON schema |
 
 ### Interaction
 
 | Tool | Description |
-|------|-------------|
+|---|---|
 | `steel_click` | Click an element with captcha recovery |
 | `steel_type` | Type text into a field |
-| `steel_fill_form` | Fill multiple form fields at once |
+| `steel_fill_form` | Fill multiple fields in one call |
 | `steel_scroll` | Scroll the page or a nested container |
-| `steel_find_elements` | Find interactive elements by selector |
-| `steel_wait` | Wait for an element to appear |
-| `steel_computer` | Low-level computer action with screenshot (path in output) |
+| `steel_find_elements` | Discover likely interactive elements |
+| `steel_wait` | Wait for an element state |
+| `steel_computer` | Low-level computer actions via Steel's cloud endpoint |
 
 ### Session management
 
 | Tool | Description |
-|------|-------------|
+|---|---|
 | `steel_pin_session` | Keep the browser session alive across prompts |
-| `steel_release_session` | Close the browser and reset to default session mode |
-
-`steel_scrape` defaults to `text`. Ask for `markdown` when headings, lists, and links matter. Ask for `html` only when raw DOM markup is actually needed.
-
-Every `steel_scrape` call saves the full content to `~/.cache/.steel-browser/scrapes/` and includes the file path in the tool output. If the inline response is truncated, the output includes an explicit instruction to use the Read tool to view the full content.
-
-`steel_scroll` can scroll the page or a nested container. For apps like Google Maps, pass a selector for the results pane instead of relying on window scrolling.
+| `steel_release_session` | Close the browser and restore the default session mode |
 
 ## Install
 
@@ -88,73 +102,106 @@ Install into Pi as a package:
 pi install npm:@false00/pi-steel
 ```
 
-Or load it for a single run:
+Use it for a single run:
 
 ```bash
 pi -e npm:@false00/pi-steel
 ```
 
-For local development from this repo:
+For local development from this repository:
 
 ```bash
-pi -e .
+pi --no-extensions -e .
 ```
 
-## Session modes
+If you already have `@false00/pi-steel` installed in Pi, `--no-extensions` prevents tool-name conflicts between the installed package and the repo-local copy.
 
-Steel sessions have a lifecycle tied to how Pi uses them. The default works for most cases, but you can tune it:
+## Quick start
 
-| Mode | Behavior |
-|------|----------|
-| `agent` (default) | One session per Pi prompt, closed after `agent_end` |
-| `session` | Session stays alive until Pi switches or shuts down |
-| `turn` | Session closed after each Pi turn — aggressive, can break multi-step workflows |
+After installing, configure Steel once and then ask Pi to browse in plain English.
 
-Set the mode via environment variable:
+### 1. Configure Steel
 
-```bash
-STEEL_SESSION_MODE=session pi -e npm:@false00/pi-steel
-```
-
-You can also change session persistence at runtime with `steel_pin_session` and `steel_release_session`.
-
-## Configuration
-
-### Required
-
-- Node.js 20+
-- A Pi runtime that supports extensions
-- Steel authentication via one of:
-  - `.env` file in `~/.config/steel/` (highest priority), or
-  - `STEEL_API_KEY`, or
-  - `steel login` config in `~/.config/steel/config.json`
-
-You can also create a `~/.config/steel/.env` file to set your API key and base URL:
+Create or update `~/.config/steel/.env`:
 
 ```env
 api_key=your-steel-api-key
-base_url=https://your-selfhosted-steel-instance.com
+# base_url=https://your-selfhosted-steel-instance.example
 ```
 
-Values in this file take precedence over all other configuration sources, including environment variables and constructor parameters.
+Alternatively, run:
+
+```bash
+steel login
+```
+
+### 2. Start Pi
+
+```bash
+pi -e npm:@false00/pi-steel
+```
+
+### 3. Ask Pi to browse
+
+```text
+Go to hacker news and tell me the top story
+Open the docs page and scrape it as markdown
+Take a screenshot of the pricing page
+Find the login button on the current page
+```
+
+## Fresh-install behavior
+
+If Steel is not configured yet:
+
+- the extension should still load
+- `~/.config/steel/.env` is created automatically when missing
+- the first Steel tool call returns an actionable configuration error instead of breaking the entire extension load
+
+That means users should no longer hit this old startup failure mode on fresh installs:
+
+```text
+Failed to load extension ... STEEL_API_KEY is required ...
+```
+
+Instead, they should be told to update `~/.config/steel/.env` or run `steel login`.
+
+## Configuration
+
+### Requirements
+
+- Node.js 20+
+- A Pi runtime with extension support
+- Steel authentication via one of:
+  - `~/.config/steel/.env`
+  - `STEEL_API_KEY`
+  - `steel login` config in `~/.config/steel/config.json`
+  - a self-hosted Steel `base_url`
+
+### Configuration priority
+
+1. `~/.config/steel/.env`
+2. Constructor options when embedding the client directly
+3. Environment variables
+4. Steel CLI config
 
 ### Environment variables
 
 **Connection**
 
 | Variable | Purpose |
-|----------|---------|
-| `~/.config/steel/.env` | `api_key` and `base_url` values (highest priority) |
+|---|---|
+| `STEEL_API_KEY` | Steel API key |
 | `STEEL_BASE_URL` | Steel API base URL |
 | `STEEL_BROWSER_API_URL` | Browser API endpoint |
 | `STEEL_LOCAL_API_URL` | Local Steel instance URL |
 | `STEEL_API_URL` | Alternative API URL |
-| `STEEL_CONFIG_DIR` | Custom config directory |
+| `STEEL_CONFIG_DIR` | Custom Steel config directory |
 
 **Session**
 
 | Variable | Purpose |
-|----------|---------|
+|---|---|
 | `STEEL_SESSION_MODE` | Lifecycle mode: `agent`, `session`, or `turn` |
 | `STEEL_SESSION_TIMEOUT_MS` | Session timeout |
 | `STEEL_SESSION_HEADLESS` | Run browser headless |
@@ -167,14 +214,14 @@ Values in this file take precedence over all other configuration sources, includ
 **Proxy**
 
 | Variable | Purpose |
-|----------|---------|
+|---|---|
 | `STEEL_USE_PROXY` | Enable proxy |
 | `STEEL_PROXY_URL` | Proxy URL |
 
 **Captcha**
 
 | Variable | Purpose |
-|----------|---------|
+|---|---|
 | `STEEL_SOLVE_CAPTCHA` | Enable captcha solving |
 | `STEEL_CAPTCHA_MAX_RETRIES` | Max captcha retry attempts |
 | `STEEL_CAPTCHA_WAIT_MS` | Captcha solve wait time |
@@ -183,39 +230,106 @@ Values in this file take precedence over all other configuration sources, includ
 **Tools**
 
 | Variable | Purpose |
-|----------|---------|
+|---|---|
 | `STEEL_TOOL_TIMEOUT_MS` | Default tool timeout |
 | `STEEL_NAVIGATE_RETRY_COUNT` | Navigation retry attempts |
 
-`pi-steel` reads Steel CLI config for auth and local API resolution, and it normalizes CLI-style API URLs such as `http://localhost:3000/v1` to the SDK-compatible base URL form.
+## Session modes
+
+| Mode | Behavior |
+|---|---|
+| `agent` (default) | One session per Pi prompt, closed after `agent_end` |
+| `session` | Session stays alive until Pi switches or shuts down |
+| `turn` | Session closes after each Pi turn |
+
+Set the mode with an environment variable:
+
+```bash
+STEEL_SESSION_MODE=session pi -e npm:@false00/pi-steel
+```
+
+You can also switch persistence at runtime with `steel_pin_session` and `steel_release_session`.
+
+## Runtime behavior
+
+### Output model
+
+- `steel_scrape` defaults to `text`
+- ask for `markdown` when headings, lists, or links matter
+- ask for `html` only when raw DOM markup is actually needed
+- full scrape output is always written to disk before inline truncation
+- screenshot, scrape, PDF, and computer outputs include artifact paths in visible tool output
+
+### Error model
+
+- tool failures are thrown back to Pi as real tool errors
+- configuration errors are classified separately and include `.env` / `steel login` guidance
+- already-classified errors are preserved instead of being wrapped repeatedly
+
+## Operational docs
+
+For setup help and examples, see:
+
+- [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md)
+- [docs/EXAMPLES.md](docs/EXAMPLES.md)
+- [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)
+
+## Repository layout
+
+```text
+dist/                     Runtime extension code committed directly to the repo
+  index.js                Pi extension entrypoint
+  steel-client.js         Steel client and session lifecycle logic
+  tools/                  Individual tool definitions
+
+docs/                     Compatibility notes, examples, troubleshooting
+.github/                  CI workflow
+
+tests/                    Smoke, runtime, and package-structure tests
+
+README.md                 User-facing package documentation
+AGENTS.md                 Maintainer and agent instructions
+CONTRIBUTING.md           Contributor workflow
+SECURITY.md               Security and disclosure policy
+CHANGELOG.md              Release history
+```
 
 ## Development
 
 ```bash
 npm install
-npm run build   # requires tsconfig.json — only if you have TS source
-npm test        # requires tsconfig.json — may not work in this fork
+npm test
+npm run test:smoke
+npm run test:runtime
+npm run test:package
+npm pack --dry-run
 ```
 
-### Publishing
+### Build note
 
-This fork's `dist/` is the source of truth (no TS source files). The `npm test` and `prepublishOnly` scripts require a `tsconfig.json` that doesn't exist in this repo, so publish with `--ignore-scripts`.
+This fork treats `dist/` as the source of truth. There is no separate TypeScript build step required for normal development or publishing.
+
+## Publishing
 
 ```bash
-# 1. Bump version and create git tag
-npm version patch   # or minor / major
-
-# 2. Verify package contents
+npm test
 npm pack --dry-run
-
-# 3. Publish (skips broken prepublishOnly script)
 npm publish --ignore-scripts
 ```
 
-If 2FA is enabled, npm will prompt you to authenticate in the browser before publishing.
+Versioning and release-discipline notes live in [AGENTS.md](AGENTS.md).
 
-The package manifest in `package.json` exposes the compiled extension entrypoint via `pi.extensions`, which lets Pi load the package root directly after install.
+## Support and feedback
+
+When reporting problems, include:
+
+- package version
+- Pi version
+- Node.js version
+- tool name
+- whether you are using Steel cloud or a self-hosted base URL
+- the relevant error message
 
 ## License
 
-MIT — same as upstream. Original work copyright (c) 2026 Steel (nibzard & Steel Experiments contributors).
+MIT — see [LICENSE](LICENSE).

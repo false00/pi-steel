@@ -1,3 +1,3 @@
-import type { ToolDefinition } from "@mariozechner/pi-coding-agent";
+import type { ToolDefinition } from "../pi-types";
 import { type SteelClient } from "../steel-client.js";
 export declare function pdfTool(client: SteelClient): ToolDefinition<any, any>;

@@ -4,62 +4,102 @@ Fork of `@steel-experiments/pi-steel` — Steel browser automation extension for
 
 ## Project structure
 
-- `dist/` — compiled JavaScript output (entry: `dist/index.js`)
-- `dist/tools/` — individual Steel tool implementations (screenshot, scrape, computer, navigate, click, etc.)
-- Source is TypeScript compiled directly to `dist/` (no separate `src/` directory)
+- `dist/` — runtime source of truth (entry: `dist/index.js`)
+- `dist/tools/` — individual Steel tool implementations
+- `dist/pi-types.d.ts` — local Pi-compatible type shims used by the published `.d.ts` files
+- `docs/` — compatibility notes, examples, troubleshooting
+- `tests/` — smoke, runtime, and package-structure checks
+- `.github/workflows/ci.yml` — install, test, and pack verification
 
 ## Key conventions
 
 - **Default export** in `dist/index.js` — the extension function registered with Pi
-- **Tool naming** — all tools prefixed `steel_` (e.g. `steel_screenshot`, `steel_scrape`)
+- **Tool naming** — all tools use the `steel_` prefix
 - **Session modes** — `agent` (default), `session`, `turn` — controlled via `STEEL_SESSION_MODE`
 - **Config priority** — `.env` file > constructor params > env vars > Steel CLI config
-- **Error handling** — tools use `withToolError()` wrapper for consistent error reporting
-- **Read tool instructions** — all artifact paths in tool output are prefixed with an explicit instruction to use the Read tool (e.g. `Use the Read tool to view the image: /path`), and `steel_scrape` shows `[Output truncated. Read the full content with the Read tool: /path]` when the inline response is truncated.
+- **Lazy Steel initialization** — missing credentials must not break extension loading; configuration errors should happen on first Steel tool use instead
+- **Fresh-install UX** — if `~/.config/steel/.env` is missing, create a template and tell the user to update it or run `steel login`
+- **Error handling** — tools use `withToolError()` and should preserve already-classified errors instead of double-wrapping them
+- **Artifact visibility** — user-visible tool output must include artifact paths for screenshots, scrapes, PDFs, and computer screenshots
 
 ## Documentation rules
 
-- **Documentation must always match code.** When adding/changing a tool parameter, default value, output format, or behavior, update all of:
-  1. The tool's `description` string in `dist/tools/<tool>.js`
-  2. `README.md` — the changes section, tools table, and any relevant prose
-  3. `AGENTS.md` — if the change affects how an agent should interact with the package
+Documentation must always match code.
 
-- **Verify before finishing.** After any code change, grep for stale references:
-  - Old default values (`fullPage: true`, etc.)
-  - Wrong file paths (`.artifacts/scrapes/`, etc.)
-  - Outdated parameter names or descriptions
+When changing a tool parameter, default, output format, runtime behavior, or setup expectation, update all relevant places:
 
-- **Tool descriptions are agent-facing documentation.** The `description` field on each tool is what the LLM sees. Keep them accurate and concise.
+1. the tool `description` in `dist/tools/<tool>.js`
+2. `README.md`
+3. `AGENTS.md`
+4. docs under `docs/` when the change affects setup, examples, compatibility, or troubleshooting
+5. tests when the behavior is observable
+
+## Testing rules
+
+Before finishing runtime or packaging changes, run:
+
+```bash
+npm test
+```
+
+Useful focused suites:
+
+```bash
+npm run test:smoke
+npm run test:runtime
+npm run test:package
+```
+
+### What the tests are expected to cover
+
+- **Smoke** — extension loads, registers tools, and creates a config template on fresh installs
+- **Runtime** — missing credentials are deferred to tool execution and include actionable `.env` guidance
+- **Package** — metadata, published files, and dependency posture stay aligned with the repository policy
 
 ## Project quirks
 
-- **No `tsconfig.json`** — This fork has no TypeScript source files; `dist/` JS is the source of truth. The `npm test` and `prepublishOnly` scripts reference `tsc -p tsconfig.json` which fails. Always use `npm publish --ignore-scripts` to skip the broken preflight.
-- **`dist/` is committed** — Changes are made directly to the `.js` files in `dist/`. There is no `src/` or separate build step.
+- **`dist/` is committed** — edit the JavaScript in `dist/` directly
+- **No separate build pipeline** — this fork treats `dist/` as the source of truth
+- **Published typings are local** — the package should not require the Pi runtime npm package just to resolve `.d.ts` files
+
+## Verification checklist
+
+After code changes, grep for stale references such as:
+
+- old default values
+- outdated file paths like legacy `.artifacts/` locations
+- old startup behavior that still claims missing `STEEL_API_KEY` should fail extension load
+- outdated references to external Pi runtime type packages in `dist/*.d.ts`
 
 ## Commit & publish policy
 
-- **Never commit without explicit user approval.** Wait for the user to say "commit" or "stage and commit". Do not commit automatically.
+- **Never commit without explicit user approval.**
 - **Never push or publish without explicit user approval.**
 
 ### Publishing workflow
 
 When the user asks to publish:
 
-1. **Check the current npm version** in `package.json`
-2. **Check the latest git tag** — should match `v{version}` format
-3. **Verify the git tag matches the npm version.** If version was bumped, the tag must also be updated. If they don't match, create the tag:
-   ```
+1. Check the current npm version in `package.json`
+2. Check the latest git tag — it should match `v{version}`
+3. If needed, create the matching tag:
+   ```bash
    git tag v{version}
    ```
-4. **Dry-run first:** `npm pack --dry-run` to verify the package contents include `dist/`, `AGENTS.md`, `README.md`, `LICENSE`
-5. **Use `npm version patch|minor|major` to bump version** — this updates `package.json` and creates a matching git tag in one step. Do NOT edit `package.json` manually.
-6. **Publish with `--ignore-scripts`** (the test/preflight scripts require a `tsconfig.json` that doesn't exist):
+4. Run:
+   ```bash
+   npm test
+   npm pack --dry-run
    ```
+5. Bump the version with `npm version patch|minor|major`
+6. Publish with:
+   ```bash
    npm publish --ignore-scripts
    ```
-7. If 2FA is enabled, npm will prompt for browser authentication before completing.
-8. **Increment the package version** if the scope of changes warrants it. Follow semver:
-   - Patch (`0.1.15 → 0.1.16`) for bug fixes and minor doc changes
-   - Minor (`0.1.15 → 0.2.0`) for new tools or behavioral changes
-   - Major (`0.1.15 → 1.0.0`) for breaking changes
-9. **Bump the package name** if the fork's direction diverges significantly from upstream or if ownership changes — but only if it genuinely makes sense to do so. Ask the user before renaming.
+7. If 2FA is enabled, complete npm's browser authentication flow
+
+### Semver guidance
+
+- **Patch** for bug fixes, dependency hardening, doc fixes, and non-breaking setup/runtime improvements
+- **Minor** for new tools or meaningful behavior additions
+- **Major** for breaking changes to tool names, parameters, outputs, or expected runtime behavior

@@ -1,4 +1,4 @@
-import type { ToolDefinition } from "@mariozechner/pi-coding-agent";
+import type { ToolDefinition } from "../pi-types";
 import { type SteelClient } from "../steel-client.js";
 export declare function goBackTool(client: SteelClient): ToolDefinition<any, any>;
 export declare function getUrlTool(client: SteelClient): ToolDefinition<any, any>;

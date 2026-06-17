@@ -1,5 +1,5 @@
-import type { AgentToolUpdateCallback } from "@mariozechner/pi-coding-agent";
-export type ToolErrorCategory = "validation" | "timeout" | "network" | "tool_execution" | "unknown";
+import type { AgentToolUpdateCallback } from "../pi-types";
+export type ToolErrorCategory = "configuration" | "validation" | "timeout" | "network" | "tool_execution" | "unknown";
 export type ToolProgressUpdater = AgentToolUpdateCallback<{
     context: string;
     kind: "progress";

@@ -1,6 +1,16 @@
 const ABORT_ERROR_NAME = "AbortError";
 const ABORT_ERROR_MESSAGE = "Tool execution cancelled.";
+const TOOL_ERROR_MARKER = Symbol.for("pi.steel.tool_error");
 const TOOL_ERROR_PATTERNS = {
+    configuration: [
+        "steel_api_key",
+        "steel login",
+        "not configured",
+        ".env",
+        "config file",
+        "base_url",
+        "base url",
+    ],
     validation: [
         "bad request",
         "invalid",
@@ -46,6 +56,7 @@ const TOOL_ERROR_PATTERNS = {
     unknown: [],
 };
 const TOOL_ERROR_LABELS = {
+    configuration: "Configuration required",
     validation: "Validation failed",
     timeout: "Timed out",
     network: "Network issue",
@@ -53,12 +64,16 @@ const TOOL_ERROR_LABELS = {
     unknown: "Tool error",
 };
 const TOOL_ERROR_GUIDANCE = {
+    configuration: "Update ~/.config/steel/.env or run `steel login`, then retry.",
     validation: "Check required inputs and retry with corrected values.",
     timeout: "Retry with narrower scope or longer timeout values.",
     network: "Retry once connectivity is stable.",
     tool_execution: "Retrying usually succeeds; if selector-based operations fail, refresh page state and try again.",
     unknown: "Retry the action and, if it repeats, rerun with simplified inputs.",
 };
+function isToolError(error) {
+    return Boolean(error && typeof error === "object" && error[TOOL_ERROR_MARKER]);
+}
 function normalizeErrorMessage(error) {
     if (error instanceof Error) {
         return error.message?.trim() || "Unknown error";
@@ -86,6 +101,9 @@ function classifyError(message) {
     return "unknown";
 }
 export function toolErrorMessage(context, error) {
+    if (error instanceof Error && isToolError(error)) {
+        return error.message;
+    }
     const message = normalizeErrorMessage(error);
     const category = classifyError(message);
     const label = TOOL_ERROR_LABELS[category];
@@ -93,7 +111,12 @@ export function toolErrorMessage(context, error) {
     return `${context}: ${label}. ${message}. Retry guidance: ${guidance}`;
 }
 export function toolError(context, error) {
-    return new Error(toolErrorMessage(context, error));
+    if (error instanceof Error && isToolError(error)) {
+        return error;
+    }
+    const wrapped = new Error(toolErrorMessage(context, error));
+    wrapped[TOOL_ERROR_MARKER] = true;
+    return wrapped;
 }
 function abortError(message = ABORT_ERROR_MESSAGE) {
     const error = new Error(message);

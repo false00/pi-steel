@@ -1,14 +1,20 @@
 {
   "name": "@false00/pi-steel",
   "version": "0.1.18",
-  "description": "Fork of @steel-experiments/pi-steel — Steel browser automation extension for Pi",
+  "description": "Production-focused Steel browser automation tools for the Pi coding agent",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist",
     "AGENTS.md",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
     "README.md",
+    "SECURITY.md",
+    "docs/COMPATIBILITY.md",
+    "docs/EXAMPLES.md",
+    "docs/TROUBLESHOOTING.md",
     "LICENSE"
   ],
   "exports": {
@@ -20,10 +26,16 @@
   "keywords": [
     "pi-package",
     "pi-extension",
+    "pi-coding-agent",
     "steel",
     "browser-automation",
+    "web-automation",
+    "playwright",
     "false00"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "license": "MIT",
   "engines": {
     "node": ">=20.0.0"
@@ -31,7 +43,15 @@
   "author": "false00 <jortega@curl.red>",
   "repository": {
     "type": "git",
-    "url": "https://github.com/false00/pi-steel"
+    "url": "git+https://github.com/false00/pi-steel.git"
+  },
+  "homepage": "https://github.com/false00/pi-steel#readme",
+  "bugs": {
+    "url": "https://github.com/false00/pi-steel/issues"
+  },
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
   },
   "pi": {
     "extensions": [
@@ -39,28 +59,22 @@
     ]
   },
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test:tools": "node --import tsx --test tests/*.test.ts",
-    "test": "npm run typecheck && npm run build && npm run test:tools",
+    "build": "node -e \"console.log('dist/ is the source of truth; no build step is required in this fork.')\"",
+    "typecheck": "node -e \"console.log('No standalone typecheck step is configured for this dist-first fork.')\"",
+    "test": "node tests/run.mjs",
+    "test:smoke": "node --test tests/smoke.test.mjs",
+    "test:runtime": "node --test tests/runtime.test.mjs",
+    "test:package": "node --test tests/package.test.mjs",
+    "lint": "echo 'no linter configured'",
     "prepublishOnly": "npm test && npm pack --dry-run"
   },
   "dependencies": {
-    "playwright-core": "^1.58.2",
-    "steel-sdk": "^0.17.0"
-  },
-  "peerDependencies": {
-    "@mariozechner/pi-coding-agent": "*",
-    "@sinclair/typebox": "*"
-  },
-  "devDependencies": {
-    "@mariozechner/pi-coding-agent": "^0.54.2",
-    "@sinclair/typebox": "^0.34.48",
-    "@types/node": "^25.3.0",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "@sinclair/typebox": "^0.34.49",
+    "playwright-core": "^1.61.0",
+    "steel-sdk": "^0.18.0"
   },
   "overrides": {
+    "form-data": "^4.0.6",
     "rimraf": "^6.0.1"
   }
 }

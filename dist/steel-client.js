@@ -57,28 +57,59 @@ function readSteelDotEnvFile() {
         return null;
     }
 }
+function resolveSteelDotEnvPath() {
+    return path.join(normalizeConfigDir(process.env.STEEL_CONFIG_DIR), ".env");
+}
 function ensureDotEnvFile(apiKey, baseURL) {
     const dir = normalizeConfigDir(process.env.STEEL_CONFIG_DIR);
-    const envPath = path.join(dir, ".env");
-    if (fs.existsSync(envPath)) {
-        return;
-    }
+    const envPath = resolveSteelDotEnvPath();
     try {
         if (!fs.existsSync(dir)) {
             fs.mkdirSync(dir, { recursive: true });
         }
-        const lines = ["# Steel configuration — created by pi-steel"];
-        if (apiKey) {
-            lines.push(`api_key=${apiKey}`);
+        const placeholderBaseUrl = "# base_url=https://your-selfhosted-steel-instance.example";
+        const initialLines = [
+            "# Steel configuration — created by pi-steel",
+            "# Update api_key below, or run `steel login`, then retry your Steel tool.",
+            apiKey ? `api_key=${apiKey}` : "api_key=",
+            baseURL ? `base_url=${baseURL}` : placeholderBaseUrl,
+        ];
+        if (!fs.existsSync(envPath)) {
+            fs.writeFileSync(envPath, initialLines.join("\n") + "\n", "utf-8");
+            return envPath;
+        }
+        if (!apiKey && !baseURL) {
+            return envPath;
+        }
+        let contents = fs.readFileSync(envPath, "utf-8");
+        let changed = false;
+        if (apiKey && /^api_key=\s*$/m.test(contents)) {
+            contents = contents.replace(/^api_key=\s*$/m, `api_key=${apiKey}`);
+            changed = true;
         }
         if (baseURL) {
-            lines.push(`base_url=${baseURL}`);
+            if (/^base_url=\s*$/m.test(contents)) {
+                contents = contents.replace(/^base_url=\s*$/m, `base_url=${baseURL}`);
+                changed = true;
+            }
+            else if (contents.includes(placeholderBaseUrl)) {
+                contents = contents.replace(placeholderBaseUrl, `base_url=${baseURL}`);
+                changed = true;
+            }
         }
-        fs.writeFileSync(envPath, lines.join("\n") + "\n", "utf-8");
+        if (changed) {
+            fs.writeFileSync(envPath, contents, "utf-8");
+        }
+        return envPath;
     }
     catch {
         // silently ignore — .env file is a convenience, not a requirement
+        return envPath;
     }
+}
+function buildMissingConfigurationMessage() {
+    const envPath = ensureDotEnvFile();
+    return `Steel is not configured. Update ${envPath} with api_key=YOUR_STEEL_API_KEY (and optionally base_url=... for self-hosted usage), or run \`steel login\`, then retry.`;
 }
 function normalizeOptionalString(value) {
     if (typeof value !== "string") {
@@ -152,7 +183,7 @@ function resolveSteelRuntimeConfig(apiKeyOverride, baseURLOverride) {
         : undefined;
     const baseURLOverridden = normalizedBaseURL !== undefined;
     if (!resolvedApiKey && !baseURLOverridden) {
-        throw toolError("SteelClient initialization", "STEEL_API_KEY is required. Set it in the environment, run `steel login`, or configure a custom Steel base URL for self-hosted usage.");
+        throw toolError("SteelClient initialization", buildMissingConfigurationMessage());
     }
     return {
         apiKey: resolvedApiKey,
@@ -329,17 +360,24 @@ function resolveSessionCreateOptionsFromEnv() {
 }
 export class SteelClient {
     static DEFAULT_SESSION_TIMEOUT_MS = 30 * 60 * 1000;
-    client;
-    apiKey;
+    client = null;
+    apiKey = null;
+    apiKeyOverride;
+    baseURLOverride;
     sessionTimeoutMs;
-    sessionCreateOptions;
+    baseSessionCreateOptions;
+    sessionCreateOptions = null;
     viewerBaseURL;
     currentSession = null;
     sessions = new Map();
     creatingSession = null;
     constructor(apiKey, options = {}) {
-        const runtimeConfig = resolveSteelRuntimeConfig(options.apiKey ?? apiKey, options.baseURL);
-        ensureDotEnvFile(runtimeConfig.apiKey, runtimeConfig.baseURL);
+        ensureDotEnvFile();
+        this.apiKeyOverride = options.apiKey ?? apiKey ?? undefined;
+        this.baseURLOverride = options.baseURL;
+        this.baseSessionCreateOptions = {
+            ...(options.sessionCreateOptions ?? {}),
+        };
         const configuredTimeout = options.sessionTimeoutMs === undefined
             ? undefined
             : Number(options.sessionTimeoutMs);
@@ -352,20 +390,33 @@ export class SteelClient {
         const normalizedFallbackTimeout = Number.isFinite(fallbackTimeout) && fallbackTimeout > 0
             ? fallbackTimeout
             : undefined;
-        const resolvedTimeout = normalizedConfiguredTimeout ??
+        this.sessionTimeoutMs = normalizedConfiguredTimeout ??
             normalizedFallbackTimeout ??
             SteelClient.DEFAULT_SESSION_TIMEOUT_MS;
+    }
+    ensureInitialized() {
+        if (this.client) {
+            return this.client;
+        }
+        const runtimeConfig = resolveSteelRuntimeConfig(this.apiKeyOverride, this.baseURLOverride);
+        ensureDotEnvFile(runtimeConfig.apiKey, runtimeConfig.baseURL);
         this.client = new Steel({
             steelAPIKey: runtimeConfig.apiKey,
             baseURL: runtimeConfig.baseURL,
         });
         this.apiKey = runtimeConfig.apiKey;
         this.viewerBaseURL = runtimeConfig.viewerBaseURL;
-        this.sessionTimeoutMs = resolvedTimeout;
-        this.sessionCreateOptions = {
-            ...resolveSessionCreateOptionsFromEnv(),
-            ...(options.sessionCreateOptions ?? {}),
-        };
+        return this.client;
+    }
+    getSessionCreateOptions() {
+        if (!this.sessionCreateOptions) {
+            this.ensureInitialized();
+            this.sessionCreateOptions = {
+                ...resolveSessionCreateOptionsFromEnv(),
+                ...this.baseSessionCreateOptions,
+            };
+        }
+        return this.sessionCreateOptions;
     }
     async getOrCreateSession() {
         if (this.currentSession) {
@@ -384,7 +435,7 @@ export class SteelClient {
         return this.currentSession !== null;
     }
     isProxyConfigured() {
-        const { useProxy, proxyUrl } = this.sessionCreateOptions;
+        const { useProxy, proxyUrl } = this.getSessionCreateOptions();
         if (typeof proxyUrl === "string" && proxyUrl.trim().length > 0) {
             return true;
         }
@@ -407,6 +458,7 @@ export class SteelClient {
         if (!targetSessionId) {
             return;
         }
+        const client = this.client;
         const tracked = this.sessions.get(targetSessionId);
         this.sessions.delete(targetSessionId);
         if (this.currentSession?.metadata.id === targetSessionId) {
@@ -417,10 +469,11 @@ export class SteelClient {
         }
         await Promise.allSettled([
             tracked.browser.close(),
-            this.client.sessions.release(targetSessionId),
+            client ? client.sessions.release(targetSessionId) : Promise.resolve(),
         ]);
     }
     async closeAllSessions() {
+        const client = this.client;
         const trackedSessions = [...this.sessions.values()];
         const sessionIds = trackedSessions.map((tracked) => tracked.metadata.id);
         this.sessions.clear();
@@ -430,15 +483,18 @@ export class SteelClient {
             return;
         }
         await Promise.allSettled(trackedSessions.map((tracked) => tracked.browser.close()));
-        const releaseResult = await Promise.allSettled(sessionIds.map((sessionId) => this.client.sessions.release(sessionId)));
-        const allRejected = releaseResult.every((entry) => entry.status === "rejected");
+        if (!client) {
+            return;
+        }
+        const releaseResult = await Promise.allSettled(sessionIds.map((sessionId) => client.sessions.release(sessionId)));
+        const allRejected = releaseResult.length > 0 && releaseResult.every((entry) => entry.status === "rejected");
         if (allRejected) {
-            await this.client.sessions.releaseAll();
+            await client.sessions.releaseAll();
         }
     }
     resolveSessionCreateOptions(options = {}) {
         const merged = {
-            ...this.sessionCreateOptions,
+            ...this.getSessionCreateOptions(),
         };
         if (options.useProxy !== undefined) {
             merged.useProxy = options.useProxy;
@@ -454,10 +510,12 @@ export class SteelClient {
         }
         return merged;
     }
-    async createSession(createOptions = this.sessionCreateOptions) {
+    async createSession(createOptions) {
         try {
-            const session = await this.client.sessions.create({
-                ...createOptions,
+            const client = this.ensureInitialized();
+            const resolvedCreateOptions = createOptions ?? this.getSessionCreateOptions();
+            const session = await client.sessions.create({
+                ...resolvedCreateOptions,
                 timeout: this.sessionTimeoutMs,
                 blockAds: true,
             });
@@ -510,9 +568,9 @@ export class SteelClient {
             content: () => page.content(),
             screenshot: (options) => page.screenshot(options),
             pdf: (options) => page.pdf(options),
-            computer: (body) => this.client.sessions.computer(sessionId, body),
-            captchasStatus: () => this.client.sessions.captchas.status(sessionId),
-            captchasSolve: () => this.client.sessions.captchas.solve(sessionId),
+            computer: (body) => this.ensureInitialized().sessions.computer(sessionId, body),
+            captchasStatus: () => this.ensureInitialized().sessions.captchas.status(sessionId),
+            captchasSolve: () => this.ensureInitialized().sessions.captchas.solve(sessionId),
         };
     }
 }

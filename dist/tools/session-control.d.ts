@@ -1,4 +1,4 @@
-import type { ToolDefinition } from "@mariozechner/pi-coding-agent";
+import type { ToolDefinition } from "../pi-types";
 import type { SteelSessionMode } from "../session-mode.js";
 import type { SteelClient } from "../steel-client.js";
 export type SteelSessionController = {
