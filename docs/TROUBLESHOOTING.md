@@ -40,6 +40,8 @@ If you see an error about the Steel base URL, make sure:
 
 ## Session or navigation failures
 
+`pi-steel` now defaults to session persistence across prompts. If a selector-based interaction tool still fails on `about:blank`, Pi likely switched sessions, restarted the browser, or was explicitly started in `agent` or `turn` mode. Navigate again in the same prompt, or re-enable persistence with `steel_pin_session` or `STEEL_SESSION_MODE=session`.
+
 Try, in order:
 
 1. Retry once

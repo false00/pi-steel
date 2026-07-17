@@ -1,12 +1,12 @@
 export function resolveSessionMode() {
     const rawValue = process.env.STEEL_SESSION_MODE?.trim().toLowerCase();
     if (!rawValue) {
-        return "agent";
+        return "session";
     }
     if (rawValue === "turn" || rawValue === "agent" || rawValue === "session") {
         return rawValue;
     }
-    console.warn(`[steel] unsupported STEEL_SESSION_MODE="${rawValue}", falling back to "agent"`);
-    return "agent";
+    console.warn(`[steel] unsupported STEEL_SESSION_MODE="${rawValue}", falling back to "session"`);
+    return "session";
 }
 //# sourceMappingURL=session-mode.js.map

@@ -2,6 +2,20 @@
 
 All notable changes to `@false00/pi-steel` are documented here.
 
+## Unreleased
+
+### Changed
+- The default Steel session mode is now `session`, so Pi keeps the same browser across prompts unless `STEEL_SESSION_MODE` explicitly opts into `agent` or `turn`
+- Session continuity guidance now points users to `steel_pin_session` as well as `STEEL_SESSION_MODE=session`
+
+### Fixed
+- `steel_click` now fails fast on `about:blank` instead of spending the full selector timeout on a fresh session with no active page
+
+### Security
+- GitHub Actions CI now audits production dependencies with `npm audit --omit=dev --audit-level=high`
+- Pull requests now run dependency review checks before merge
+- CodeQL analysis now scans the repository for JavaScript security issues on pushes, pull requests, and a weekly schedule
+
 ## 0.2.0 - 2026-06-17
 
 ### Added

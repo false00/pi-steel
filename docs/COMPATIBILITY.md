@@ -14,6 +14,7 @@ Verified from this repository after the current hardening pass:
 - This fork treats `dist/` as the runtime source of truth.
 - There is no TypeScript build step required to use or publish the package.
 - `npm test` validates runtime/package behavior without requiring live Steel credentials.
+- The default runtime session mode is `session`, so cross-prompt browsing continuity is the out-of-the-box behavior.
 - Live browsing still requires Steel credentials or a self-hosted Steel base URL.
 
 ## Fresh-install compatibility behavior

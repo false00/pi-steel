@@ -10,7 +10,7 @@ Navigate to a docs page and scrape it as markdown
 Find the login button on the page
 Fill the email and password fields, but stop before submitting
 Scroll the results pane on Google Maps
-Pin the current browser session so it survives the next prompt
+Keep using the same browser in the next prompt
 Release the Steel session when you're done
 ```
 
@@ -35,6 +35,8 @@ api_key=your-steel-api-key
 pi -e npm:@false00/pi-steel
 ```
 
+The default runtime mode is `session`, so the browser should stay alive across prompts unless you explicitly opt into `agent` or `turn`.
+
 ## Useful prompt patterns
 
 ### Readable scraping
@@ -58,5 +60,7 @@ Open the page, take a screenshot, and then summarize what is visible
 ### Session persistence
 
 ```text
-Log into the site, pin the session, and keep using the same browser in the next prompt
+Log into the site and keep using the same browser in the next prompt
 ```
+
+If you explicitly launched Pi with `STEEL_SESSION_MODE=agent` or `STEEL_SESSION_MODE=turn`, ask Pi to run `steel_pin_session` before the next prompt.

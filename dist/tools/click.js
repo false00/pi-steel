@@ -3,6 +3,7 @@ import { sessionDetails } from "../steel-client.js";
 import { runWithCaptchaRecovery } from "./captcha-guard.js";
 import { emitProgress, throwIfAborted, withAbortSignal, withToolError, } from "./tool-runtime.js";
 import { MAX_TOOL_TIMEOUT_MS, resolveToolTimeoutMs, } from "./tool-settings.js";
+import { blankPageError, isBlankPageUrl, readSessionUrl, } from "./session-state.js";
 function compactCaptchaRecovery(summary) {
     return {
         triggered: summary.triggered,
@@ -155,7 +156,7 @@ export function clickTool(client) {
     return {
         name: "steel_click",
         label: "Click",
-        description: "Click an element in the page",
+        description: "Click an element on the current page",
         parameters: Type.Object({
             selector: Type.String({ description: "CSS selector of the element to click" }),
             timeout: Type.Optional(Type.Integer({
@@ -171,6 +172,10 @@ export function clickTool(client) {
                 const timeoutMs = normalizeTimeout(params.timeout);
                 await emitProgress(onUpdate, "steel_click", `Preparing click for ${selector}`);
                 const session = (await withAbortSignal(client.getOrCreateSession(), signal));
+                const url = await readSessionUrl(session);
+                if (isBlankPageUrl(url)) {
+                    throw blankPageError("click the selected element");
+                }
                 await emitProgress(onUpdate, "steel_click", "Running click sequence");
                 const captchaRecovery = await runWithCaptchaRecovery({
                     session,

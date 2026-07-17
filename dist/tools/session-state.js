@@ -35,12 +35,12 @@ export function isBlankPageUrl(url) {
     return normalized === "about:blank" || normalized === "about:srcdoc";
 }
 export function freshSessionHint() {
-    return "This usually means Pi started a fresh Steel session. Navigate to a page first, or run Pi with STEEL_SESSION_MODE=session to keep the same browser across prompts.";
+    return "This usually means Pi started a fresh Steel session or the runtime is using a non-persistent session mode. Navigate to a page first, or enable persistence with steel_pin_session or STEEL_SESSION_MODE=session.";
 }
 export function blankPageError(action) {
     return new Error(`Cannot ${action} because the current page is about:blank. ${freshSessionHint()}`);
 }
 export function describeBlankPage(url) {
-    return `Current URL: ${url} (fresh Steel session; navigate first or use STEEL_SESSION_MODE=session for cross-prompt continuity)`;
+    return `Current URL: ${url} (fresh Steel session; navigate first or enable persistence with steel_pin_session or STEEL_SESSION_MODE=session)`;
 }
 //# sourceMappingURL=session-state.js.map

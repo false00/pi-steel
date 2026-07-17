@@ -31,8 +31,8 @@ What it emphasizes:
 - **Pi-friendly output** — screenshot, scrape, PDF, and computer tools return artifact paths in plain tool output so agents can actually read them
 - **Safer fresh installs** — missing Steel credentials no longer break extension loading; the package creates a template `~/.config/steel/.env` and tells the user what to update
 - **Cleaner local state** — artifacts live under `~/.cache/.steel-browser/` instead of cluttering project directories
-- **Session lifecycle control** — default per-agent sessions plus explicit pin/release tools and session-mode configuration
-- **Publishable package hygiene** — CI, changelog, security policy, contributing guide, docs, and package tests
+- **Session lifecycle control** — session-persistent browsing by default plus explicit pin/release tools and opt-in stricter cleanup modes
+- **Publishable package hygiene** — CI, dependency review, vulnerability scanning, changelog, security policy, contributing guide, docs, and package tests
 
 ## Changes from upstream
 
@@ -42,10 +42,13 @@ This fork currently adds or changes the following behavior:
 - **Fresh-install template creation** — if the file is missing, `pi-steel` creates a template and tells the user to update it
 - **Lazy Steel initialization** — the extension loads even when credentials are missing; the failure is deferred until the first Steel tool call
 - **Clearer error guidance** — configuration failures tell the user to update `~/.config/steel/.env` or run `steel login`
+- **Session persistence by default** — when `STEEL_SESSION_MODE` is unset, Pi keeps the same Steel browser alive for the active Pi session
+- **Fail-fast blank-page interaction errors** — selector-based tools report session continuity problems immediately instead of spending a full selector timeout on `about:blank`
 - **Read-tool-friendly artifact paths** — screenshot, scrape, PDF, and computer outputs include explicit file paths in visible tool output
 - **Full scrape persistence** — `steel_scrape` writes the complete content to disk before truncating inline output
 - **Artifact directory relocation** — screenshots, scrapes, and PDFs are stored under `~/.cache/.steel-browser/`
 - **`/clear_webcache` command** — deletes cached Steel artifacts from the local cache directory
+- **Security workflows** — GitHub Actions now run production dependency audit, dependency review on pull requests, and CodeQL analysis
 
 ## Tool coverage
 
@@ -140,6 +143,8 @@ steel login
 ```bash
 pi -e npm:@false00/pi-steel
 ```
+
+By default, `pi-steel` keeps the same Steel browser session alive for the active Pi session, so cross-prompt browsing behaves more like a normal web browser.
 
 ### 3. Ask Pi to browse
 
@@ -238,17 +243,19 @@ Instead, they should be told to update `~/.config/steel/.env` or run `steel logi
 
 | Mode | Behavior |
 |---|---|
-| `agent` (default) | One session per Pi prompt, closed after `agent_end` |
-| `session` | Session stays alive until Pi switches or shuts down |
+| `session` (default) | Session stays alive until Pi switches or shuts down |
+| `agent` | One session per Pi prompt, closed after `agent_end` |
 | `turn` | Session closes after each Pi turn |
 
-Set the mode with an environment variable:
+Selector-based interaction tools operate on the current browser page only. With the default `session` mode, Pi should usually keep the same browser alive across prompts. If you explicitly switch to `agent` or `turn` and the current URL becomes `about:blank`, tools such as `steel_click` should tell you to navigate first or re-enable persistence.
+
+Set the mode with an environment variable only when you want stricter cleanup semantics than the default:
 
 ```bash
-STEEL_SESSION_MODE=session pi -e npm:@false00/pi-steel
+STEEL_SESSION_MODE=agent pi -e npm:@false00/pi-steel
 ```
 
-You can also switch persistence at runtime with `steel_pin_session` and `steel_release_session`.
+You can also switch persistence at runtime with `steel_pin_session` and `steel_release_session`. `steel_pin_session` is mainly useful when you started Pi in `agent` or `turn` mode and want to promote the active browser to session persistence without restarting.
 
 ## Runtime behavior
 
@@ -283,7 +290,8 @@ dist/                     Runtime extension code committed directly to the repo
   tools/                  Individual tool definitions
 
 docs/                     Compatibility notes, examples, troubleshooting
-.github/                  CI workflow
+.github/                  GitHub workflow directory
+.github/workflows/        CI, dependency review, and CodeQL security workflows
 
 tests/                    Smoke, runtime, and package-structure tests
 
