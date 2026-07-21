@@ -155,6 +155,31 @@ Take a screenshot of the pricing page
 Find the login button on the current page
 ```
 
+### 4. Teach pi.dev to use `pi-steel` correctly
+
+If you use `pi.dev` with a global `AGENTS.md` or similar user-level instructions, add a short browser-automation section there. This does not install the extension by itself; users still need `pi install npm:@false00/pi-steel` or `pi -e npm:@false00/pi-steel`.
+
+Suggested `AGENTS.md` snippet:
+
+```md
+## Browser automation with @false00/pi-steel
+
+When browser automation is needed, prefer the `steel_*` tools from `@false00/pi-steel`.
+
+- Use `steel_*` tools before Playwright, Puppeteer, Selenium, or ad-hoc browser setup.
+- If the `steel_*` tools are unavailable in the current Pi session, say so plainly and ask to restart Pi with `pi -e npm:@false00/pi-steel` or install the package with `pi install npm:@false00/pi-steel`. Do not spend turns building a fallback browser stack unless explicitly asked.
+- Keep the same Steel browser session across prompts when tasks span multiple prompts.
+- If a selector-based tool fails because the current page is `about:blank`, do not retry the selector blindly. Navigate again in the same prompt or run `steel_pin_session`.
+- Always set an explicit `steel_scrape` format: `text` for concise answers, `markdown` when headings, links, or lists matter, `html` only for raw DOM debugging.
+- If `steel_scrape` output is truncated, read the saved artifact path instead of re-running the scrape.
+- Treat `steel_find_elements` results as candidate selectors, not guaranteed unique selectors. Prefer stable selectors like `#id`, `[name]`, `[aria-label]`, `[data-testid]`, or specific `href` values.
+- Prefer DOM-level tools such as `steel_click`, `steel_type`, `steel_fill_form`, `steel_wait`, `steel_scroll`, `steel_scrape`, and `steel_screenshot` before using `steel_computer`.
+- Do not assume `steel_computer` works on self-hosted Steel. Fall back to DOM-level tools when computer actions are unavailable.
+- When screenshot, scrape, PDF, or computer tools return an artifact path, read that artifact instead of repeating the same tool call.
+- If a Steel tool reports missing configuration, stop retrying and tell the user to update `~/.config/steel/.env` or run `steel login`.
+- Use `steel_release_session` only when the browsing task is complete.
+```
+
 ## Fresh-install behavior
 
 If Steel is not configured yet:
